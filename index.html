@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1A2015">
+<title>Field Maintenance Assistant (FMA)</title>
+<style>
+@font-face{font-family:'Material Symbols Outlined';font-style:normal;font-weight:100 700;font-display:block;src:url(fonts/material-symbols-outlined.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:400;font-display:swap;src:url(fonts/barlow-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:500;font-display:swap;src:url(fonts/barlow-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:600;font-display:swap;src:url(fonts/barlow-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:700;font-display:swap;src:url(fonts/barlow-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:600;font-display:swap;src:url(fonts/barlow-condensed-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:700;font-display:swap;src:url(fonts/barlow-condensed-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:800;font-display:swap;src:url(fonts/barlow-condensed-latin-800-normal.woff2) format('woff2')}
+:root{
+  --bg:#12160F;--surface:#1A2015;--card:#232B1C;--line:#3B4730;--olive:#5F6E34;--olive-2:#A3B567;--on-olive:#10140B;
+  --accent:#E8AC2E;--on-accent:#10140B;--khaki:#D6D9C0;--on-khaki:#10140B;--text:#EEF0E3;--muted:#AAB09A;
+  --ok:#4CB050;--warn:#F2B01E;--high:#FF7A1A;--danger:#E5483B;--info:#5B9BD5;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#12160F;--surface:#1A2015;--card:#232B1C;--line:#3B4730;--olive:#5F6E34;--olive-2:#A3B567;--on-olive:#10140B;--accent:#E8AC2E;--on-accent:#10140B;--khaki:#D6D9C0;--on-khaki:#10140B;--text:#EEF0E3;--muted:#AAB09A;--ok:#4CB050;--warn:#F2B01E;--high:#FF7A1A;--danger:#E5483B;--info:#5B9BD5}
+}
+:root[data-theme="dark"]{--bg:#12160F;--surface:#1A2015;--card:#232B1C;--line:#3B4730;--olive:#5F6E34;--olive-2:#A3B567;--on-olive:#10140B;--accent:#E8AC2E;--on-accent:#10140B;--khaki:#D6D9C0;--on-khaki:#10140B;--text:#EEF0E3;--muted:#AAB09A;--ok:#4CB050;--warn:#F2B01E;--high:#FF7A1A;--danger:#E5483B;--info:#5B9BD5}
+/* Sunlight mode: high-glare outdoor readability */
+:root[data-theme="light"]{--bg:#E2E0D0;--surface:#F0EEE2;--card:#FBFAF3;--line:#ABA98F;--olive:#4B5A22;--olive-2:#3F4D1A;--on-olive:#FFFFFF;--accent:#E0A21C;--on-accent:#10140B;--khaki:#2F3A17;--on-khaki:#F4F2E6;--text:#141A0C;--muted:#4F5442;--ok:#2E7D32;--warn:#9A6400;--high:#BF4A00;--danger:#C62828;--info:#1F5E99}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:500 16px/1.4 'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:24px;line-height:1;display:inline-block;width:1em;overflow:hidden;text-transform:none;letter-spacing:normal;white-space:nowrap;direction:ltr;-webkit-font-smoothing:antialiased;font-feature-settings:'liga';flex:none}
+#app{position:relative;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);border-inline:1px solid var(--line)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Bars */
+.bar{flex:none;display:flex;align-items:center;gap:6px;padding:8px 12px;min-height:60px;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar h1{flex:1;margin:0;font:800 20px/1.1 'Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:48px;height:48px;border:0;border-radius:12px;background:transparent;display:grid;place-items:center;cursor:pointer}
+.iconbtn .ms{font-size:28px}
+.offline{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:20px;border:1px solid var(--line);font:700 12px 'Barlow Condensed',sans-serif;letter-spacing:.08em;white-space:nowrap}
+.offline i{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.offline.warn i{background:var(--warn)}
+main{flex:1;overflow-y:auto;padding:16px 16px 28px;-webkit-overflow-scrolling:touch}
+.footer{flex:none;display:flex;gap:10px;padding:12px 14px;background:var(--surface);border-top:1px solid var(--line)}
+.footer .btn{flex:1;min-width:0}
+nav.tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line)}
+.tab{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:68px;color:var(--muted);font:700 12px 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.tab .ms{padding:3px 16px;border-radius:14px}
+.tab.on{color:var(--text)}
+.tab.on .ms{background:var(--olive);color:#fff}
+
+/* Buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:58px;padding:10px 14px;border-radius:12px;border:2px solid transparent;background:var(--accent);color:var(--on-accent);font:700 17px/1.1 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-align:center}
+.btn span:last-child{min-width:0}
+.btn.outline{background:transparent;color:var(--text);border-color:var(--olive)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.ghost-danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.stack{display:grid;gap:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.two .btn{font-size:15px}
+
+/* Home */
+.hello h2{margin:0;font:800 26px/1.05 'Barlow Condensed',sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.hello p{margin:4px 0 0;color:var(--muted)}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qbtn{height:120px;border:0;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px;font:800 18px/1.05 'Barlow Condensed',sans-serif;letter-spacing:.05em;cursor:pointer}
+.qbtn .ms{font-size:42px}
+.q-olive{background:var(--olive-2);color:var(--on-olive)}
+.q-accent{background:var(--accent);color:var(--on-accent)}
+.q-khaki{background:var(--khaki);color:var(--on-khaki)}
+.chain{margin-top:14px;padding:14px;border-radius:14px;border:1.5px dashed var(--olive-2)}
+.chain b{font:800 15px 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--olive-2)}
+.chain ol{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chain li{font-size:14px;font-weight:600}
+.chain li+li::before{content:'›';margin-right:6px;color:var(--accent);font-weight:800}
+
+/* Sections, cards */
+.sec{display:flex;align-items:center;gap:10px;margin:24px 0 10px;font:800 16px 'Barlow Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--olive-2)}
+.sec::before{content:'';width:4px;height:18px;border-radius:2px;background:var(--accent);flex:none}
+.sec span{flex:1}
+.sec small{color:var(--muted);font:600 13px 'Barlow',sans-serif;letter-spacing:0;text-transform:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.muted{color:var(--muted)}
+.row{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row dt{color:var(--muted);font-size:13px;font-weight:700}
+.row dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+dl{margin:0}
+.item,.mod{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px;margin-bottom:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;cursor:pointer}
+.item.sel{border:2px solid var(--accent)}
+.mod.dim{opacity:.75}
+.ibox{width:50px;height:50px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--olive-2) 18%,transparent);color:var(--olive-2);flex:none}
+.ibox .ms{font-size:28px}
+.grow{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.grow b{font-size:17px;line-height:1.2}
+.grow small{color:var(--muted);font-size:13px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{color:var(--muted)}
+.chip{display:inline-block;padding:3px 8px;border-radius:6px;border:1.5px solid var(--tone);color:var(--tone);background:color-mix(in srgb,var(--tone) 15%,transparent);font:700 13px/1.2 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.t-ok{--tone:var(--ok)}.t-warn{--tone:var(--warn)}.t-high{--tone:var(--high)}.t-danger{--tone:var(--danger)}.t-info{--tone:var(--info)}.t-muted{--tone:var(--muted)}.t-olive{--tone:var(--olive-2)}.t-accent{--tone:var(--accent)}
+.banner{display:flex;gap:12px;align-items:center;padding:13px 14px;border-radius:12px;margin:10px 0;border:1.5px solid var(--warn);background:color-mix(in srgb,var(--warn) 13%,transparent)}
+.banner .ms{color:var(--warn)}
+.banner.danger{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 13%,transparent)}
+.banner.danger .ms{color:var(--danger)}
+.banner.info{border-color:var(--info);background:color-mix(in srgb,var(--info) 12%,transparent)}
+.banner.info .ms{color:var(--info)}
+.empty{text-align:center;padding:30px 12px;color:var(--muted)}
+.empty .ms{font-size:52px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats.three{grid-template-columns:repeat(3,1fr)}
+.stat{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:13px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-align:left}
+.stat b{font:800 34px/1 'Barlow Condensed',sans-serif;color:var(--tone)}
+.stat span{color:var(--muted);font-size:13px;font-weight:700;line-height:1.2}
+button.stat{cursor:pointer}
+.stat.sel{border:2px solid var(--tone);background:color-mix(in srgb,var(--tone) 14%,var(--card))}
+
+/* Fault cards */
+.fcard{display:grid;grid-template-columns:1fr auto;gap:3px 10px;width:100%;text-align:left;padding:13px 14px;margin-bottom:10px;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--tone);border-radius:14px;cursor:pointer}
+.fcard .fid{font:700 16px 'Barlow Condensed',sans-serif;letter-spacing:.06em;color:var(--accent)}
+.fcard .full{grid-column:1/-1}
+.fcard b.full{font-size:17px}
+.fcard .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.fcard small{color:var(--muted);font-size:13px}
+.sev-low{--tone:var(--info)}.sev-medium{--tone:var(--warn)}.sev-high{--tone:var(--high)}.sev-critical{--tone:var(--danger)}
+
+/* Inputs */
+label.f{display:block;margin-bottom:14px;font-weight:700;font-size:14px;color:var(--muted)}
+.inp,select.inp,textarea.inp{display:block;width:100%;margin-top:6px;padding:16px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font:600 17px 'Barlow',sans-serif}
+textarea.inp{resize:vertical;min-height:120px;line-height:1.4}
+.inp:focus{outline:none;border-color:var(--accent)}
+.search{margin-bottom:12px}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;margin-bottom:6px;scrollbar-width:none}
+.fchip{flex:none;min-height:44px;padding:8px 14px;border-radius:22px;border:1.5px solid var(--line);background:var(--card);font:700 15px 'Barlow Condensed',sans-serif;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.fchip.on{background:var(--olive);border-color:var(--olive);color:#fff}
+
+/* Wizard */
+.prog{margin:-16px -16px 14px;padding:12px 16px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.prog small{color:var(--muted);font-weight:700;letter-spacing:.06em}
+.prog h2{margin:2px 0 10px;font:800 22px 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.track{height:9px;border-radius:5px;background:var(--card);overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{min-height:100px;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;font:700 16px/1.15 'Barlow Condensed',sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.tile .ms{font-size:32px;color:var(--olive-2)}
+.tile.sel{border:2.5px solid var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--card))}
+.tile.sel .ms{color:var(--accent)}
+.sevbtn{display:flex;align-items:center;gap:14px;width:100%;min-height:78px;padding:0 18px;margin-bottom:10px;border-radius:14px;border:2px solid var(--tone);background:color-mix(in srgb,var(--tone) 12%,transparent);cursor:pointer;text-align:left}
+.sevbtn b{font:800 24px 'Barlow Condensed',sans-serif;letter-spacing:.06em;color:var(--tone);min-width:110px}
+.sevbtn span{flex:1;color:var(--muted);font-size:14px;text-align:right}
+.sevbtn.sel{background:var(--tone)}
+.sevbtn.sel b,.sevbtn.sel span{color:#fff}
+.loc{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:0 14px;margin-bottom:8px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;text-align:left;font-weight:600}
+.loc span{flex:1}
+.loc.sel{border:2.5px solid var(--accent)}
+.loc .ms{color:var(--olive-2)}
+.loc.sel .ms:last-child{color:var(--accent)}
+
+/* Troubleshooting */
+.step{padding:18px;border-radius:16px;background:var(--card);border:2px solid var(--line);margin:10px 0 14px}
+.step.k-q{border-color:var(--info)}.step.k-a{border-color:var(--accent)}.step.k-s{border-color:var(--danger)}.step.k-o{border-color:var(--olive-2)}
+.steph{display:flex;justify-content:space-between;align-items:center}
+.stepn{font:800 15px 'Barlow Condensed',sans-serif;letter-spacing:.1em;padding:4px 10px;border-radius:8px;background:var(--olive);color:#fff}
+.kind{font:700 13px 'Barlow Condensed',sans-serif;letter-spacing:.1em;color:var(--muted)}
+.stept{margin:16px 0 0;font:700 25px/1.25 'Barlow',sans-serif}
+.hint{display:flex;gap:8px;margin:12px 0 0;color:var(--muted);font-size:15px}
+.hint .ms{font-size:20px}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.yn button{height:108px;border:0;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:800 28px 'Barlow Condensed',sans-serif;letter-spacing:.08em;color:#fff;cursor:pointer}
+.yn .ms{font-size:38px}
+.yn .yes{background:var(--ok)}.yn .no{background:var(--danger)}
+.ropt{display:flex;align-items:center;gap:14px;width:100%;min-height:74px;padding:0 16px;margin-bottom:10px;border-radius:14px;border:1.5px solid var(--tone);background:var(--card);cursor:pointer;text-align:left}
+.ropt .ms{color:var(--tone);font-size:30px}
+.ropt b{flex:1;font:800 19px 'Barlow Condensed',sans-serif;letter-spacing:.06em}
+.ropt.hl{border-width:3px;background:color-mix(in srgb,var(--tone) 16%,var(--card))}
+.ropt small{font:700 12px 'Barlow Condensed',sans-serif;letter-spacing:.08em;color:var(--tone)}
+.stop{padding:18px;border-radius:16px;border:2.5px solid var(--danger);background:color-mix(in srgb,var(--danger) 13%,transparent);text-align:center}
+.stop>.ms{font-size:58px;color:var(--danger)}
+.stop h3{margin:6px 0 2px;font:800 21px 'Barlow Condensed',sans-serif;letter-spacing:.05em;color:var(--danger)}
+.stop h4{margin:0 0 10px;font:800 17px 'Barlow Condensed',sans-serif;letter-spacing:.05em}
+.stop p{margin:0 0 14px;color:var(--muted)}
+ol.log{margin:0;padding-left:22px;color:var(--muted)}
+ol.log li{padding:4px 0}
+
+/* Outcome */
+.outcome{text-align:center;padding-top:10px}
+.outcome>.ms{font-size:96px;width:auto;color:var(--tone)}
+.outcome h2{margin:6px 0 4px;font:800 30px 'Barlow Condensed',sans-serif;letter-spacing:.06em;color:var(--tone)}
+.outcome p{color:var(--muted);margin:0 0 18px}
+.bigid{font:800 34px 'Barlow Condensed',sans-serif;letter-spacing:.08em;color:var(--accent);user-select:all}
+
+/* Checklist */
+.chk{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:0 14px;margin-bottom:8px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;text-align:left;font-weight:600;font-size:17px}
+.chk .ms{font-size:34px;color:var(--muted)}
+.chk.on{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,var(--card))}
+.chk.on .ms{color:var(--ok)}
+
+/* Timeline */
+.tl{display:grid;grid-template-columns:54px 20px 1fr;align-items:stretch}
+.tld{padding-top:14px;text-align:right}
+.tld b{display:block;font:800 16px 'Barlow Condensed',sans-serif}
+.tld small{color:var(--muted);font-size:12px}
+.tlr{position:relative}
+.tlr::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl:first-child .tlr::before{top:20px}
+.tl:last-child .tlr::before{bottom:calc(100% - 22px)}
+.tlr i{position:absolute;left:3px;top:18px;width:14px;height:14px;border-radius:50%;background:var(--tone);border:3px solid var(--bg)}
+.tlc{padding-bottom:10px}
+.tlc .card{margin:0;display:block;width:100%;text-align:left}
+.tlc .card p{margin:4px 0}
+.tlc .card .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+.acc{color:var(--accent);font-weight:700}
+
+/* Reference */
+details.ref{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
+details.ref summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;min-height:64px}
+details.ref summary::-webkit-details-marker{display:none}
+details.ref summary .grow b{font-size:17px}
+details.ref[open] summary .chev{transform:rotate(90deg)}
+details.ref ul{margin:0;padding:0 16px 16px 40px}
+details.ref li{padding:3px 0}
+
+/* QR, voice */
+.finder{position:relative;height:250px;border-radius:16px;background:#000;display:grid;place-items:center;margin-bottom:14px;border:3px solid var(--accent)}
+.finder .ms{font-size:120px;width:auto;color:#5a5f4c}
+.mic{width:150px;height:150px;border-radius:50%;border:0;margin:6px auto 10px;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);cursor:pointer}
+.mic .ms{font-size:72px;width:auto}
+.mic.on{background:var(--danger);color:#fff}
+.center{text-align:center}
+.flowlist{list-style:none;padding:0;margin:0}
+.flowlist li{padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-weight:700}
+.flowlist li+li{margin-top:22px;position:relative}
+.flowlist li+li::before{content:'↓';position:absolute;top:-21px;left:50%;color:var(--accent);font-weight:800}
+
+/* Splash, login */
+.splash{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}
+.logo{width:104px;height:104px;border-radius:24px;border:3px solid var(--olive-2);background:var(--card);display:grid;place-items:center;position:relative;flex:none;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.logo .ms{position:absolute;width:auto}
+.logo .g1{font-size:72px;color:var(--olive)}
+.logo .g2{font-size:38px;color:var(--accent)}
+.brand{margin:10px 0 0;font:800 30px/1.02 'Barlow Condensed',sans-serif;letter-spacing:.07em;text-transform:uppercase}
+.brand-short{font:800 22px 'Barlow Condensed',sans-serif;letter-spacing:.4em;color:var(--accent);margin:2px 0 0;padding-left:.4em}
+.tag{color:var(--muted);font-size:17px;font-style:italic;margin:6px 0 0}
+.splash .bar2{width:180px;height:6px;border-radius:3px;background:var(--card);overflow:hidden;margin-top:22px}
+.splash .bar2 i{display:block;height:100%;width:40%;background:var(--accent);animation:load 1.5s ease-in-out forwards}
+@keyframes load{to{width:100%}}
+@media (prefers-reduced-motion: reduce){.splash .bar2 i{animation:none;width:100%}}
+.login{padding:24px 20px 32px;overflow-y:auto;height:100%}
+.login .head{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:22px}
+.pill{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--ok);color:var(--ok);font:700 13px 'Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.pill i{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.err{color:var(--danger);font-weight:700;margin:0 0 12px}
+.demo{margin-top:18px;padding:14px;border-radius:12px;border:1px dashed var(--line);color:var(--muted);font-size:14px}
+.demo b{color:var(--text)}
+
+/* Modal, toast */
+#modal[hidden]{display:none}
+.backdrop{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.sheet{width:100%;max-width:496px;max-height:80vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.sheet h2{margin:0 0 8px;font:800 22px 'Barlow Condensed',sans-serif;letter-spacing:.05em;text-transform:uppercase}
+.sheet p{margin:0 0 16px;color:var(--muted);white-space:pre-line}
+.mact{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.pick{display:flex;flex-direction:column;align-items:flex-start;width:100%;min-height:58px;padding:10px 14px;margin-bottom:8px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;text-align:left}
+.pick b{font-size:16px}.pick small{color:var(--muted)}
+.merr{color:var(--danger);font-weight:700;min-height:1.2em;margin:6px 0}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:60;display:flex;gap:10px;align-items:center;max-width:min(92vw,480px);padding:14px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--ok);font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35);transition:opacity .2s,transform .2s}
+.toast .ms{color:var(--ok)}
+.toast.bad{border-color:var(--danger)}.toast.bad .ms{color:var(--danger)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:360px){.qbtn{font-size:15px}.row{grid-template-columns:96px 1fr}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   FIELD MAINTENANCE ASSISTANT (FMA) — browser prototype
+   Offline-first: all data is stored on this device (localStorage).
+   Sample data is generic and contains no sensitive information.
+   ===================================================================== */
+
+// ---------------------------------------------------------------- constants
+const DAY = 864e5;
+const FT = {
+  notStarting:'Equipment Not Starting', powerFailure:'Power Failure', battery:'Battery Problem',
+  overheating:'Overheating', leakage:'Leakage', noise:'Abnormal Noise', comms:'Communication Failure',
+  display:'Display/Indicator Failure', damage:'Physical Damage', other:'Other'
+};
+const FAULT_TYPES = Object.values(FT);
+const FT_IC = {[FT.notStarting]:'power_settings_new',[FT.powerFailure]:'power_off',[FT.battery]:'battery_alert',[FT.overheating]:'device_thermostat',[FT.leakage]:'water_damage',[FT.noise]:'graphic_eq',[FT.comms]:'signal_cellular_connected_no_internet_0_bar',[FT.display]:'warning',[FT.damage]:'broken_image',[FT.other]:'help'};
+const CATS = {vehicles:'Vehicles', power:'Power', communication:'Communication', fieldUtilities:'Field utilities', other:'Other equipment'};
+const CAT_IC = {vehicles:'local_shipping', power:'bolt', communication:'settings_input_antenna', fieldUtilities:'water_drop', other:'inventory_2'};
+const TYPE_IC = {generator:'electrical_services',vehicle:'local_shipping',trailer:'rv_hookup',battery:'battery_charging_full',inverter:'power',pdu:'power_input',radio:'settings_input_antenna',telephone:'phone_in_talk',comms_accessory:'headset_mic',pump:'water',water_storage:'water_drop',lighting:'lightbulb',hvac:'ac_unit'};
+const EQS = {operational:['Operational','ok'], underMaintenance:['Under maintenance','info'], faultReported:['Fault reported','warn'], critical:['Critical','danger']};
+const FS = {reported:['Reported','warn'], underInspection:['Under inspection','info'], awaitingPart:['Awaiting part','high'], underRepair:['Under repair','info'], resolved:['Resolved','ok'], closed:['Closed','muted'], escalated:['Escalated','danger']};
+const SEVT = {low:'info', medium:'warn', high:'high', critical:'danger'};
+const SEV_HINT = {low:'Minor defect, still usable', medium:'Degraded performance', high:'Equipment not usable', critical:'Safety risk or major impact'};
+const ROLE = {field:'Field User', supervisor:'JCO / Supervisor', technician:'Technician'};
+const USERS = {FMA001:{pw:'1234',name:'R. Sharma',role:'field'}, FMA002:{pw:'1234',name:'S. Singh',role:'supervisor'}, FMA003:{pw:'1234',name:'A. Das',role:'technician'}};
+const TECHS = ['A. Das','P. Nair'];
+const LOCATIONS = ['Vehicle Park, Sector A','Signal Centre','Maintenance Store','Field Workshop','Camp Area, Block B','Water Point','Section HQ'];
+const TEMPLATES = {
+  generic:['Physical condition','Connections','Battery / power','Fuel / consumables','Indicators','Cleanliness','Leakage','Abnormal sound','Functional check'],
+  generator:['Physical condition and mounting','Cable and earth connections','Battery and terminals','Fuel level and consumables','Indicators and gauges','Cleanliness and ventilation clearance','Leakage (fuel / oil / coolant)','Abnormal sound or vibration','Functional check as per authorised procedure'],
+  vehicle:['Physical condition','Tyres and wheels','Battery and terminals','Fuel, oil and coolant levels','Lights and indicators','Cleanliness','Leakage under vehicle','Abnormal sound','Brakes functional check'],
+  radio:['Physical condition','Antenna and connectors','Battery charge','Handset and accessories','Indicators / display','Cleanliness','Moisture or ingress','Abnormal sound / audio','Functional check (test call)'],
+  pump:['Physical condition','Hose and coupling connections','Power / fuel supply','Consumables','Indicators','Cleanliness and strainer','Leakage at joints and seals','Abnormal sound or vibration','Functional check (flow)']
+};
+
+// ------------------------------------------------------ troubleshooting data
+// Node kinds: q = YES/NO question, a = action, s = STOP & escalate, o = outcome.
+// Trees are pure data: add new equipment/fault procedures here without new screens.
+const q=(id,t,y,n,h)=>[id,{k:'q',t,y,n,h}], a=(id,t,x,h)=>[id,{k:'a',t,x,h}], stop=(id,t,h)=>[id,{k:'s',t,h}],
+      ok=(id,t='Equipment working normally.')=>[id,{k:'o',o:'resolved',t}], per=(id,t='Fault persists after authorised user-level checks.')=>[id,{k:'o',o:'persists',t}];
+const tree=(id,type,fault,title,start,safety,nodes)=>({id,type,fault,title,start,safety,nodes:Object.fromEntries(nodes)});
+const batteryTree = type => tree('battery-'+type,type,FT.battery,'Battery problem','hazard',true,[
+  q('hazard','Is the battery swollen, cracked, leaking or hot?','stop_hazard','terminals'),
+  stop('stop_hazard','Damaged battery is a safety hazard.','Do not touch, charge or move it. Isolate the area.'),
+  q('terminals','Are terminals clean and tight?','charging','fix_terminals'),
+  a('fix_terminals','Clean and secure terminals as per authorised procedure.','charging','Equipment OFF. Use authorised PPE.'),
+  q('charging','Is the charging source connected and indicating charge?','final','connect'),
+  a('connect','Connect the authorised charging source.','final'),
+  q('final','Does the system now hold charge and supply power?','resolved','persists'),
+  ok('resolved','Battery system supplying power normally.'), per('persists')]);
+const TREES = [
+  tree('gen-not-starting','generator',FT.notStarting,'Generator not starting','fuel',true,[
+    q('fuel','Is the fuel level adequate?','battery','refuel','Read the fuel gauge or indicator. Equipment switched OFF.'),
+    a('refuel','Refuel as per authorised procedure.','refuel_check','Engine OFF. No naked flame. Wipe any spillage.'),
+    q('refuel_check','Did the problem resolve?','resolved','battery','Attempt one start using the authorised starting procedure.'),
+    q('battery','Is the battery connection secure?','estop','secure_battery','Visual check only. Do not touch terminals with metal tools.'),
+    a('secure_battery','Secure the battery connection as per authorised procedure.','battery_check','Equipment OFF. Never short the terminals.'),
+    q('battery_check','Did the problem resolve?','resolved','estop'),
+    q('estop','Is the emergency stop released?','start_procedure','release_estop'),
+    a('release_estop','Release the emergency stop as per authorised procedure.','estop_check','Confirm the reason it was pressed has been cleared.'),
+    q('estop_check','Did the problem resolve?','resolved','start_procedure'),
+    a('start_procedure','Check the relevant authorised starting procedure and attempt one start.','final_check','Do not exceed the authorised number of start attempts.'),
+    q('final_check','Did the generator start and run normally?','resolved','persists'),
+    ok('resolved','Generator started and is running normally.'), per('persists','Generator still not starting after user-level checks.')]),
+  tree('gen-overheating','generator',FT.overheating,'Generator overheating','shutdown',true,[
+    a('shutdown','Switch OFF as per authorised procedure and allow to cool.','smoke','Do not open caps or touch hot surfaces.'),
+    q('smoke','Any smoke, burning smell or fluid leak?','stop_smoke','airflow'),
+    stop('stop_smoke','Smoke, burning smell or leak needs a technician.','Keep personnel clear. Do not restart.'),
+    q('airflow','Are air intake and exhaust areas clear of obstruction?','load','clear'),
+    a('clear','Clear obstruction and restore ventilation clearance.','load','Equipment OFF and cooled.'),
+    q('load','Is the connected load within rated capacity?','restart','reduce'),
+    a('reduce','Reduce the connected load to within rated capacity.','restart'),
+    a('restart','Restart using the authorised starting procedure and monitor temperature.','final'),
+    q('final','Is temperature now normal?','resolved','persists'),
+    ok('resolved','Generator running at normal temperature.'), per('persists')]),
+  batteryTree('battery'), batteryTree('generator'), batteryTree('vehicle'),
+  tree('radio-comms','radio',FT.comms,'Radio communication failure','power',false,[
+    q('power','Is the set powered ON with a charged battery?','antenna','fit_battery'),
+    a('fit_battery','Fit a charged battery and switch ON.','antenna'),
+    q('antenna','Is the antenna fitted and secure?','channel','fit_antenna'),
+    a('fit_antenna','Fit and secure the antenna.','channel','Never transmit without an antenna.'),
+    q('channel','Is the correct channel set as per authorised orders?','test','set_channel'),
+    a('set_channel','Set the channel as per authorised orders.','test'),
+    q('test','Does a test call with a nearby station succeed?','resolved','persists'),
+    ok('resolved','Communication restored.'), per('persists')]),
+  tree('pump-leakage','pump',FT.leakage,'Water pump leakage','isolate',false,[
+    q('isolate','Is the pump switched OFF and isolated?','source','do_isolate'),
+    a('do_isolate','Switch OFF and isolate power before inspection.','source'),
+    q('source','Is the leak at a hose or coupling joint?','tighten','stop_body'),
+    stop('stop_body','Leak from pump body or seal needs a technician.'),
+    a('tighten','Reseat the hose and secure the coupling as per authorised procedure.','final'),
+    q('final','Has the leak stopped during a functional check?','resolved','persists'),
+    ok('resolved','Leak stopped. Pump operating normally.'), per('persists')]),
+  tree('vehicle-not-starting','vehicle',FT.notStarting,'Vehicle not starting','neutral',true,[
+    q('neutral','Is the vehicle in neutral/park with handbrake applied?','fuel','set_neutral'),
+    a('set_neutral','Select neutral/park and apply the handbrake.','fuel'),
+    q('fuel','Is there adequate fuel?','lights','refuel'),
+    a('refuel','Refuel as per authorised procedure.','lights','Engine OFF. No naked flame.'),
+    q('lights','Do dashboard lights come on with ignition ON?','start','terminals'),
+    a('terminals','Check battery terminals are secure (ignition OFF).','lights2'),
+    q('lights2','Do dashboard lights come on now?','start','stop_elec'),
+    stop('stop_elec','No electrical power indicates an electrical fault.'),
+    a('start','Attempt start using the authorised starting procedure.','final','Do not crank longer than the authorised duration.'),
+    q('final','Did the engine start and run normally?','resolved','persists'),
+    ok('resolved','Vehicle started and running normally.'), per('persists')]),
+  tree('generic','*','*','Basic authorised checks','damage',true,[
+    q('damage','Any visible damage, smoke, burning smell or fluid leak?','stop_damage','connections'),
+    stop('stop_damage','Switch OFF if safe to do so and do not operate.','Keep personnel clear.'),
+    q('connections','Are power, fuel and cable connections secure?','indicators','secure'),
+    a('secure','Secure connections with equipment switched OFF, as per authorised procedure.','recheck'),
+    q('recheck','Does the equipment now work normally?','resolved','indicators'),
+    q('indicators','Are indicators and displays showing normal readings?','operate','stop_ind'),
+    stop('stop_ind','Abnormal indications need technician diagnosis.'),
+    a('operate','Carry out the authorised operating procedure once.','final'),
+    q('final','Does the equipment now work normally?','resolved','persists'),
+    ok('resolved'), per('persists')])
+];
+const findTree = (type, fault) => TREES.find(t=>t.type===type && t.fault===fault) || TREES.find(t=>t.type==='*');
+const MISSING_NODE = {k:'s', t:'Procedure data is incomplete for this step.', h:'Do not improvise. Escalate to an authorised technician.'};
+
+// --------------------------------------------------------------- reference
+const REF_CATS = ['Equipment','Maintenance','Safety','Checklists','Common Faults','Technical Reference'];
+const REF_IC = {'Equipment':'inventory_2','Maintenance':'build','Safety':'health_and_safety','Checklists':'checklist','Common Faults':'report_problem','Technical Reference':'menu_book'};
+const REFS = [
+  ['Equipment','Field generator: basic care',['Operate only if trained and authorised.','Keep ventilation clearance; never run in an enclosed space.','Earth as per authorised procedure before connecting load.','Log run hours and refuelling.'],'generator power'],
+  ['Equipment','Radio set: basic care',['Fit a charged battery before deployment.','Keep antenna connectors clean and dry.','Never transmit with the antenna removed.','Set channels only as per authorised orders.'],'radio communication'],
+  ['Equipment','Water pump: basic care',['Prime and operate as per authorised procedure.','Check hoses and couplings before each use.','Clean the inlet strainer after use.'],'pump water'],
+  ['Maintenance','Recording maintenance',['Every check, fault and repair is saved on this device.','Records include date, equipment, action, person and status.','Records will sync to a central database in a future version.'],'history record'],
+  ['Maintenance','Scheduled maintenance',['The next scheduled date is shown on each equipment profile.','Overdue items appear on the supervisor dashboard.','Carry out scheduled tasks only as per authorised schedules.'],'overdue schedule'],
+  ['Safety','General equipment safety',['Switch OFF and isolate before any inspection.','Never bypass safety devices or interlocks.','Use authorised PPE.','If unsure: stop and escalate to an authorised technician.'],'safety sop'],
+  ['Safety','Fuel handling',['Engine OFF before refuelling.','No naked flame or smoking within the safety distance.','Wipe spillage immediately and report large spills.'],'fuel refuel generator vehicle'],
+  ['Safety','Battery safety',['Swollen, cracked, leaking or hot battery: do not touch or charge.','Isolate the area and escalate.','Never short terminals with tools.'],'battery'],
+  ['Checklists','Daily check sequence',['Physical condition, connections, power, consumables.','Indicators, cleanliness, leakage, abnormal sound.','Functional check last.','Report any defect through Report fault.'],'daily checklist'],
+  ['Common Faults','Generator not starting',['Low fuel.','Loose battery connection.','Emergency stop engaged.','Incorrect starting procedure.','Use guided troubleshooting for step-by-step checks.'],'generator not starting'],
+  ['Common Faults','Overheating',['Blocked air intake or exhaust.','Load above rated capacity.','Low coolant or oil (technician check).'],'overheating temperature'],
+  ['Common Faults','Communication failure',['Discharged battery.','Loose or missing antenna.','Wrong channel set.'],'radio communication'],
+  ['Common Faults','Leakage',['Loose hose or coupling.','Worn seal (technician repair).','Damaged body (technician repair).'],'leak pump'],
+  ['Technical Reference','Fault severity guide',['Low: minor defect, equipment usable.','Medium: degraded performance.','High: equipment not usable.','Critical: safety risk or major task impact.'],'severity'],
+  ['Technical Reference','Fault status definitions',['Reported: recorded by the user.','Escalated: sent to a technician.','Under inspection: accepted by a technician.','Awaiting part / under repair: work in progress.','Resolved: repaired. Closed: verified by supervisor.'],'status'],
+  ['Technical Reference','When to escalate',['Guided checks did not restore the equipment.','Any smoke, burning smell, damage or leak from the body.','Any step needs the equipment opened or special tools.','Whenever you are unsure.'],'escalate technician']
+].map(([cat,title,points,tags])=>({cat,title,points,tags}));
+
+// ---------------------------------------------------------------- utilities
+const $app = document.getElementById('app');
+const iso = t => new Date(t).toISOString();
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const p2 = n => String(n).padStart(2,'0');
+const fmtD = s => { if(!s) return '—'; const d=new Date(s); return `${p2(d.getDate())} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; };
+const fmtDT = s => { if(!s) return '—'; const d=new Date(s); return `${fmtD(s)}, ${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+const fmtDur = ms => { const h=ms/36e5; return h>=24 ? (h/24).toFixed(1)+' days' : h>=1 ? Math.round(h)+' h' : Math.round(ms/6e4)+' min'; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fail = m => { throw new Error(m); };
+
+// ------------------------------------------------------------ local storage
+const KEY = 'fma_store_v1';
+let S = null, saveIssue = false;
+function load(){ try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : null; } catch(e){ S = null; } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); saveIssue = false; } catch(e){ saveIssue = true; } }
+
+// ---------------------------------------------------------------- seed data
+const EQ_ROWS = [
+  ['EQ-GEN-01','Field Generator 01','power','generator','GEN-5K-24011','Vehicle Park, Sector A','Signal Section','operational',-6,24,1],
+  ['EQ-GEN-02','Field Generator 02','power','generator','GEN-5K-24012','Signal Centre','Signal Section','faultReported',-29,1,1],
+  ['EQ-VEH-01','Utility Vehicle 01','vehicles','vehicle','UV-23-0410','Vehicle Park, Sector A','Transport Section','operational',-10,20,1],
+  ['EQ-RAD-01','Radio Set 01','communication','radio','RS-22-1187','Signal Centre','Signal Section','underMaintenance',-15,15,0],
+  ['EQ-PMP-01','Water Pump 01','fieldUtilities','pump','WP-21-0093','Water Point','Engineer Section','operational',-8,22,0],
+  ['EQ-BAT-01','Battery System 01','power','battery','BS-24-0201','Signal Centre','Signal Section','critical',-20,10,1],
+  ['EQ-VEH-02','Light Vehicle 01','vehicles','vehicle','LV-23-0112','Vehicle Park, Sector A','Transport Section','operational',-12,18,1],
+  ['EQ-VEH-03','Field Vehicle 01','vehicles','vehicle','FV-22-0778','Field Workshop','Transport Section','underMaintenance',-35,-5,1],
+  ['EQ-TRL-01','Trailer 01','vehicles','trailer','TR-20-0055','Vehicle Park, Sector A','Transport Section','operational',-40,50,0],
+  ['EQ-INV-01','Inverter 01','power','inverter','INV-23-0301','Section HQ','Signal Section','operational',-18,42,0],
+  ['EQ-PDU-01','Power Distribution Unit 01','power','pdu','PDU-22-0044','Camp Area, Block B','Engineer Section','operational',-25,35,1],
+  ['EQ-BAT-02','Battery System 02','power','battery','BS-24-0202','Section HQ','Signal Section','operational',-9,21,1],
+  ['EQ-RAD-02','Radio Set 02','communication','radio','RS-22-1188','Section HQ','Signal Section','operational',-4,26,0],
+  ['EQ-TEL-01','Field Telephone 01','communication','telephone','FT-19-0310','Section HQ','Signal Section','operational',-30,30,0],
+  ['EQ-TEL-02','Field Telephone 02','communication','telephone','FT-19-0311','Camp Area, Block B','Signal Section','faultReported',-30,30,0],
+  ['EQ-ACC-01','Communication Accessories Kit 01','communication','comms_accessory','CA-21-0071','Maintenance Store','Signal Section','operational',-45,45,0],
+  ['EQ-PMP-02','Water Pump 02','fieldUtilities','pump','WP-21-0094','Water Point','Engineer Section','underMaintenance',-50,-2,0],
+  ['EQ-WST-01','Water Storage System 01','fieldUtilities','water_storage','WS-20-0012','Water Point','Engineer Section','operational',-14,46,0],
+  ['EQ-LGT-01','Lighting System 01','fieldUtilities','lighting','LS-22-0140','Camp Area, Block B','Engineer Section','operational',-40,-3,0],
+  ['EQ-LGT-02','Lighting System 02','fieldUtilities','lighting','LS-22-0141','Section HQ','Engineer Section','operational',-11,49,0],
+  ['EQ-HVC-01','Heating/Cooling Unit 01','fieldUtilities','hvac','HC-23-0021','Section HQ','Engineer Section','operational',-16,44,0],
+  ['EQ-HVC-02','Heating/Cooling Unit 02','fieldUtilities','hvac','HC-23-0022','Signal Centre','Engineer Section','operational',-16,44,0],
+  ['EQ-OTH-01','Tool Kit Set 01','other','other','TK-18-0007','Field Workshop','Maintenance Section','operational',-60,30,0],
+  ['EQ-OTH-02','Field Workshop Shelter 01','other','other','FS-17-0003','Field Workshop','Maintenance Section','operational',-90,90,0]
+];
+function seed(){
+  const now = Date.now(), y = new Date(now).getFullYear();
+  const id = n => `FMA-${y}-${p2(n).padStart(5,'0')}`;
+  const ago = (d,h=0) => iso(now - d*DAY - h*36e5);
+  const ev = (s,at,by,note) => ({s,at,by,note});
+  const F = o => Object.assign({assigned:null,photo:false,voice:false,log:[],remarks:[],parts:[],action:null,partReq:null,resolvedAt:null,history:[]}, o);
+  const equipment = EQ_ROWS.map(r=>({id:r[0],name:r[1],cat:r[2],type:r[3],serial:r[4],loc:r[5],section:r[6],status:r[7],last:iso(now+r[8]*DAY),next:iso(now+r[9]*DAY),safety:!!r[10]}));
+  const faults = [
+    F({id:id(109),eq:'EQ-GEN-02',eqName:'Field Generator 02',type:FT.overheating,desc:'Temperature warning after long continuous run.',sev:'medium',loc:'Signal Centre',by:'R. Sharma',at:ago(30),status:'closed',assigned:'A. Das',action:'Air intake cleared and cooling fins cleaned.',resolvedAt:ago(29),history:[ev('reported',ago(30),'R. Sharma','Fault reported'),ev('underRepair',ago(30,-3),'A. Das','Repair started'),ev('resolved',ago(29),'A. Das','Repair completed'),ev('closed',ago(28),'S. Singh','Verified and closed')]}),
+    F({id:id(112),eq:'EQ-GEN-01',eqName:'Field Generator 01',type:FT.battery,desc:'Weak cranking during morning start.',sev:'medium',loc:'Vehicle Park, Sector A',by:'R. Sharma',at:ago(13,4),status:'resolved',assigned:'A. Das',action:'Battery terminals cleaned and secured; charge restored.',resolvedAt:ago(13),history:[ev('reported',ago(13,4),'R. Sharma','Fault reported'),ev('underInspection',ago(13,3),'A. Das','Accepted by technician'),ev('resolved',ago(13),'A. Das','Repair completed')]}),
+    F({id:id(118),eq:'EQ-PMP-02',eqName:'Water Pump 02',type:FT.leakage,desc:'Water dripping near pump body during operation.',sev:'medium',loc:'Water Point',by:'R. Sharma',at:ago(2),status:'underInspection',assigned:'P. Nair',log:['Is the pump switched OFF and isolated? → YES','Is the leak at a hose or coupling joint? → NO'],history:[ev('reported',ago(2),'R. Sharma','Fault reported'),ev('escalated',ago(2),'R. Sharma','Escalated to authorised technician'),ev('underInspection',ago(1,20),'P. Nair','Accepted by technician')]}),
+    F({id:id(119),eq:'EQ-VEH-03',eqName:'Field Vehicle 01',type:FT.notStarting,desc:'Starter does not engage. Dashboard lights normal.',sev:'high',loc:'Field Workshop',by:'R. Sharma',at:ago(3),status:'awaitingPart',assigned:'A. Das',partReq:'Starter Relay',remarks:['Starter relay found faulty on test.'],history:[ev('reported',ago(3),'R. Sharma','Fault reported'),ev('escalated',ago(3),'R. Sharma','Escalated to authorised technician'),ev('underInspection',ago(2,20),'A. Das','Accepted by technician'),ev('awaitingPart',ago(2,18),'A. Das','Part required: Starter Relay')]}),
+    F({id:id(120),eq:'EQ-RAD-01',eqName:'Radio Set 01',type:FT.comms,desc:'No transmission. Receive normal.',sev:'medium',loc:'Signal Centre',by:'R. Sharma',at:ago(1,6),status:'underRepair',assigned:'A. Das',history:[ev('reported',ago(1,6),'R. Sharma','Fault reported'),ev('escalated',ago(1,5),'R. Sharma','Escalated to authorised technician'),ev('underInspection',ago(1,2),'A. Das','Accepted by technician'),ev('underRepair',ago(1),'A. Das','Repair started')]}),
+    F({id:id(121),eq:'EQ-GEN-02',eqName:'Field Generator 02',type:FT.overheating,desc:'High temperature indication after two hours.',sev:'medium',loc:'Signal Centre',by:'R. Sharma',at:ago(0,5),status:'reported',history:[ev('reported',ago(0,5),'R. Sharma','Fault reported')]}),
+    F({id:id(122),eq:'EQ-BAT-01',eqName:'Battery System 01',type:FT.battery,desc:'Battery casing swollen and warm.',sev:'critical',loc:'Signal Centre',by:'R. Sharma',at:ago(0,3),status:'escalated',log:['Is the battery swollen, cracked, leaking or hot? → YES'],history:[ev('reported',ago(0,3),'R. Sharma','Fault reported'),ev('escalated',ago(0,3),'R. Sharma','Escalated to authorised technician')]}),
+    F({id:id(123),eq:'EQ-TEL-02',eqName:'Field Telephone 02',type:FT.comms,desc:'No ring at remote end.',sev:'low',loc:'Camp Area, Block B',by:'R. Sharma',at:ago(1),status:'reported',history:[ev('reported',ago(1),'R. Sharma','Fault reported')]})
+  ];
+  let n = 0;
+  const mr = (d,eq,eqName,type,remarks,by,status,faultId=null,faultType=null) => ({id:'MR-SEED-'+(++n),eq,eqName,date:ago(d),type,remarks,by,status,faultId,faultType});
+  const maintenance = [
+    mr(19,'EQ-GEN-01','Field Generator 01','Routine inspection','Inspection completed. No defects.','A. Das','Completed'),
+    mr(13,'EQ-GEN-01','Field Generator 01','Corrective repair','Battery terminals cleaned and secured; charge restored.','A. Das','Resolved',id(112),FT.battery),
+    mr(6,'EQ-GEN-01','Field Generator 01','Routine maintenance','Scheduled service carried out as per schedule.','A. Das','Completed'),
+    mr(29,'EQ-GEN-02','Field Generator 02','Corrective repair','Air intake cleared and cooling fins cleaned.','A. Das','Resolved',id(109),FT.overheating),
+    mr(10,'EQ-VEH-01','Utility Vehicle 01','Routine maintenance','Scheduled service completed.','P. Nair','Completed'),
+    mr(8,'EQ-PMP-01','Water Pump 01','Routine inspection','Couplings and strainer checked.','P. Nair','Completed'),
+    mr(4,'EQ-RAD-02','Radio Set 02','Daily check','All 9 items checked OK.','R. Sharma','Completed'),
+    mr(40,'EQ-LGT-01','Lighting System 01','Routine inspection','Inspection completed.','P. Nair','Completed')
+  ];
+  const parts = [
+    ['P01','Battery','BAT-001','Battery System / Generator',4,'Maintenance Store'],['P02','Fuel Filter','FLT-101','Generator',6,'Maintenance Store'],
+    ['P03','Air Filter','FLT-102','Generator',0,'Maintenance Store'],['P04','Coolant (authorised grade)','CLT-120','Generator / Vehicle',3,'Maintenance Store'],
+    ['P05','Starter Relay','REL-210','Vehicle',0,'Field Workshop'],['P06','Antenna','ANT-310','Radio Set',3,'Signal Centre'],
+    ['P07','Radio Battery Pack','BAT-320','Radio Set',2,'Signal Centre'],['P08','Coupling Seal Kit','SEAL-410','Water Pump',5,'Maintenance Store'],
+    ['P09','Hose Assembly','HSE-420','Water Pump',1,'Maintenance Store'],['P10','Fuse Set','FUS-510','Power Distribution Unit',10,'Maintenance Store'],
+    ['P11','Lamp Unit','LMP-610','Lighting System',8,'Maintenance Store']
+  ].map(r=>({id:r[0],name:r[1],no:r[2],equipment:r[3],qty:r[4],loc:r[5]}));
+  S = {equipment, faults, maintenance, parts, checklists:{}, counter:124, cleared:false};
+  save();
+}
+
+// -------------------------------------------------------------- repository
+const eqById = id => S.equipment.find(e=>e.id===id);
+const faultById = id => S.faults.find(f=>f.id===id);
+const isOpen = f => f.status!=='resolved' && f.status!=='closed';
+const faultsSorted = () => [...S.faults].sort((a,b)=>b.at.localeCompare(a.at));
+const findDup = (eq,type) => S.faults.find(f=>f.eq===eq && f.type===type && isOpen(f));
+function counts(){ const c={operational:0,underMaintenance:0,faultReported:0,critical:0}; S.equipment.forEach(e=>{ c[e.status]=(c[e.status]||0)+1; }); return c; }
+function refreshEq(id){
+  const e = eqById(id); if(!e) return;
+  const open = S.faults.filter(f=>f.eq===id && isOpen(f));
+  e.status = open.some(f=>f.sev==='critical') ? 'critical'
+    : open.some(f=>['underInspection','underRepair','awaitingPart'].includes(f.status)) ? 'underMaintenance'
+    : open.length ? 'faultReported' : 'operational';
+}
+function nextFaultId(){ const y=new Date().getFullYear(); let id; do { id=`FMA-${y}-${String(S.counter++).padStart(5,'0')}`; } while(faultById(id)); return id; }
+function reportFault({eq,type,desc,sev,loc,photo,voice,allowDup}){
+  const e = eqById(eq) || fail('Equipment not found. Select the equipment again.');
+  if(!type) fail('Select the fault type.');
+  if(!sev) fail('Select severity.');
+  if(!loc || !loc.trim()) fail('Select or enter a location.');
+  if(!allowDup){ const d=findDup(eq,type); if(d){ const x=new Error('duplicate'); x.dup=d; throw x; } }
+  const now = iso(Date.now());
+  const f = {id:nextFaultId(),eq,eqName:e.name,type,desc:(desc||'').trim()||'No additional description.',sev,loc:loc.trim(),by:user.name,at:now,status:'reported',assigned:null,photo:!!photo,voice:!!voice,log:[],remarks:[],parts:[],action:null,partReq:null,resolvedAt:null,history:[{s:'reported',at:now,by:user.name,note:'Fault reported'}]};
+  S.faults.push(f); refreshEq(eq); save(); return f;
+}
+function transition(id,status,note,mut){
+  const f = faultById(id) || fail('Fault record not found.');
+  if(mut) mut(f);
+  f.status = status;
+  f.history.push({s:status,at:iso(Date.now()),by:user.name,note});
+  refreshEq(f.eq); save(); return f;
+}
+function addRecord(eqId,type,remarks,status,f){
+  const e = eqById(eqId); if(!e) return;
+  const now = iso(Date.now());
+  S.maintenance.push({id:'MR-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),eq:e.id,eqName:e.name,date:now,type,remarks,by:user.name,status,faultId:f?f.id:null,faultType:f?f.type:null});
+  e.last = now; save();
+}
+const R = {
+  escalate(id,log=[]){ const f=faultById(id)||fail('Fault record not found.'); if(!isOpen(f)) fail('This fault is already closed.'); transition(id,'escalated','Escalated to authorised technician',x=>x.log.push(...log)); },
+  escalateNew(eq,type,log){ const d=findDup(eq,type); if(d){ R.escalate(d.id,log); return d; } const e=eqById(eq); const f=reportFault({eq,type,desc:'Raised from guided troubleshooting. User-level checks did not resolve the fault.',sev:'medium',loc:e?e.loc:'Not specified',allowDup:true}); R.escalate(f.id,log); return f; },
+  resolveByUser(id,log){ const f=transition(id,'resolved','Resolved by user through guided checks',x=>{ x.log.push(...log); x.action='Rectified at user level through authorised guided checks.'; x.resolvedAt=iso(Date.now()); }); addRecord(f.eq,'User-level rectification',`${f.type}: restored through ${log.length} guided steps.`,'Resolved',f); },
+  rectifyNoFault(eq,type,log){ eqById(eq)||fail('Equipment not found.'); addRecord(eq,'User-level rectification',`${type}: restored through ${log.length} guided steps.`,'Resolved',null); },
+  assign(id,t){ const f=faultById(id)||fail('Fault record not found.'); transition(id,f.status,`Assigned to ${t}`,x=>{ x.assigned=t; }); },
+  close(id){ const f=faultById(id)||fail('Fault record not found.'); if(f.status!=='resolved') fail('Only resolved faults can be closed.'); transition(id,'closed','Verified and closed'); },
+  accept(id){ const f=faultById(id)||fail('Fault record not found.'); if(!['reported','escalated'].includes(f.status)) fail('This fault has already been accepted.'); transition(id,'underInspection','Accepted by technician',x=>{ x.assigned=user.name; }); },
+  startRepair(id){ transition(id,'underRepair','Repair started'); },
+  awaitPart(id,name){ transition(id,'awaitingPart',`Part required: ${name}`,x=>{ x.partReq=name; }); },
+  partReceived(id){ transition(id,'underRepair','Part received, repair resumed',x=>{ x.partReq=null; }); },
+  remark(id,t){ const f=faultById(id)||fail('Fault record not found.'); f.remarks.push(t); save(); },
+  repairAction(id,t){ const f=faultById(id)||fail('Fault record not found.'); f.action=t; save(); },
+  usePart(id,pid){ const p=S.parts.find(x=>x.id===pid)||fail('Part not found.'); if(p.qty<=0) fail(`${p.name} is out of stock. Use Mark awaiting part.`); const f=faultById(id)||fail('Fault record not found.'); p.qty--; f.parts.push(`${p.name} (${p.no}) ×1`); save(); },
+  resolve(id){ const f=faultById(id)||fail('Fault record not found.'); if(f.status==='awaitingPart') fail('Part still awaited. Use Part received first.'); if(!f.action) fail('Record the repair action before resolving.'); transition(id,'resolved','Repair completed',x=>{ x.resolvedAt=iso(Date.now()); }); addRecord(f.eq,'Corrective repair',f.action+(f.parts.length?` | Parts: ${f.parts.join(', ')}`:''),'Resolved',f); }
+};
+function checklistFor(e){ const s=S.checklists[e.id]; if(s && !s.done) return JSON.parse(JSON.stringify(s)); return {eq:e.id,name:'Daily check',items:(TEMPLATES[e.type]||TEMPLATES.generic).map(l=>({l,c:false})),done:false,updated:null}; }
+const BUCKETS = [['new','New faults','danger'],['assigned','Assigned','warn'],['progress','In progress','info'],['parts','Awaiting parts','high'],['done','Completed','ok']];
+function bucket(b){ return faultsSorted().filter(f=> b==='new' ? f.status==='escalated' && !f.assigned
+  : b==='assigned' ? !!f.assigned && ['reported','escalated','underInspection'].includes(f.status)
+  : b==='progress' ? f.status==='underRepair' : b==='parts' ? f.status==='awaitingPart' : !isOpen(f)); }
+
+// Voice parser (speech-to-text simulated; parser is real)
+function hasWord(t,w){ return new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(t); }
+const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const VOICE_FAULTS = [[FT.notStarting,['not starting','not start',"won t start",'wont start','does not start','no start']],[FT.overheating,['overheat','overheating','too hot']],[FT.leakage,['leak','leaking','leakage']],[FT.battery,['battery']],[FT.comms,['communication','no signal','not transmitting','no contact']],[FT.noise,['noise','knocking','rattling']],[FT.powerFailure,['power failure','no power','tripping']],[FT.display,['display','indicator','screen']],[FT.damage,['damage','damaged','broken','cracked']]];
+function parseVoice(text){
+  const t = norm(text);
+  let eq = S.equipment.find(e=>t.includes(norm(e.name)) || t.includes(e.id.toLowerCase()));
+  if(!eq) eq = S.equipment.find(e=>{ const w=norm(e.name).split(' '); if(w.length<2) return false; const num=w[w.length-1], kw=w[w.length-2], n=parseInt(num,10); return hasWord(t,kw) && !isNaN(n) && (hasWord(t,num) || hasWord(t,String(n))); });
+  if(!eq) eq = S.equipment.find(e=>{ const w=norm(e.name).split(' '); return w.length>=2 && hasWord(t,w[w.length-2]); });
+  let ft = null; for(const [type,keys] of VOICE_FAULTS){ if(keys.some(k=>t.includes(k))){ ft=type; break; } }
+  return {eq, ft};
+}
+
+// ---------------------------------------------------------- session & nav
+let phase = 'splash', user = null, tab = 0, stack = [], tabState = {}, lastKey = '';
+let loginState = {uid:'', pw:'', role:'field', err:''};
+const TABS = {
+  field:[['home','Home','home'],['equipment','Equipment','inventory_2'],['faults','Faults','report'],['history','History','history'],['profile','Profile','person']],
+  supervisor:[['home','Home','home'],['equipment','Equipment','inventory_2'],['faults','Faults','report'],['dashboard','Dashboard','dashboard'],['profile','Profile','person']],
+  technician:[['tasks','Tasks','engineering'],['equipment','Equipment','inventory_2'],['faults','Faults','report'],['history','History','history'],['profile','Profile','person']]
+};
+const top = () => stack[stack.length-1];
+function curState(){ if(!user) return loginState; const t=top(); if(t) return t.st; const k=TABS[user.role][tab][0]; return tabState[k] || (tabState[k]={}); }
+function go(s,p={}){ stack.push({s,p,st:{}}); render(); }
+function back(){ stack.pop(); render(); }
+function replace(s,p={}){ stack.pop(); stack.push({s,p,st:{}}); render(); }
+function home(){ stack=[]; render(); }
+
+// ---------------------------------------------------------- HTML helpers
+const ic = n => `<span class="ms" aria-hidden="true">${n}</span>`;
+const da = o => Object.entries(o).filter(([,v])=>v!==undefined&&v!==null).map(([k,v])=>` data-${k}="${esc(v)}"`).join('');
+const btn = (label,act,o={},cls='',icon='',dis=false) => `<button class="btn ${cls}" data-a="${act}"${da(o)}${dis?' disabled':''}>${icon?ic(icon):''}<span>${esc(label)}</span></button>`;
+const chip = (label,tone) => `<span class="chip t-${tone}">${esc(label)}</span>`;
+const eqChip = e => chip(EQS[e.status][0], EQS[e.status][1]);
+const fChip = f => chip(FS[f.status][0], FS[f.status][1]);
+const sevChip = s => chip(s, SEVT[s]);
+const sec = (t,extra='') => `<h3 class="sec"><span>${esc(t)}</span>${extra}</h3>`;
+const row = (k,v,raw=false) => `<div class="row"><dt>${esc(k)}</dt><dd>${raw?v:esc(v==null||v===''?'—':v)}</dd></div>`;
+const safety = (t='Follow authorised technical instructions and SOPs.',kind='') => `<div class="banner ${kind}">${ic(kind==='danger'?'dangerous':kind==='info'?'info':'health_and_safety')}<b>${esc(t)}</b></div>`;
+const empty = (i,m) => `<div class="empty">${ic(i)}<p>${esc(m)}</p></div>`;
+const stat = (label,v,tone,act,o={},sel=false) => act
+  ? `<button class="stat t-${tone} ${sel?'sel':''}" data-a="${act}"${da(o)}><b>${v}</b><span>${esc(label)}</span></button>`
+  : `<div class="stat t-${tone}"><b>${v}</b><span>${esc(label)}</span></div>`;
+const mod = (icon,title,sub,act,o={},cls='') => `<button class="mod ${cls}" data-a="${act}"${da(o)}><span class="ibox">${ic(icon)}</span><span class="grow"><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</span><span class="chev">${ic('chevron_right')}</span></button>`;
+const eqCard = (e,act='go',sel=false) => `<button class="item ${sel?'sel':''}" data-a="${act}" data-s="eqProfile" data-id="${esc(e.id)}"><span class="ibox">${ic(TYPE_IC[e.type]||'inventory_2')}</span><span class="grow"><b>${esc(e.name)}</b><small>${esc(e.id)} · ${esc(e.loc)}</small>${eqChip(e)}</span><span class="chev">${ic(sel?'check_circle':'chevron_right')}</span></button>`;
+const faultCard = f => `<button class="fcard sev-${f.sev}" data-a="go" data-s="faultDetail" data-id="${esc(f.id)}"><span class="fid">${esc(f.id)}</span>${sevChip(f.sev)}<b class="full">${esc(f.eqName)}</b><span class="full">${esc(f.type)}</span><span class="full meta">${fChip(f)}<small>By ${esc(f.by)} · ${fmtD(f.at)}</small></span></button>`;
+const logo = (id='') => `<div class="logo" ${id?`id="${id}"`:''}><span class="ms g1">settings</span><span class="ms g2">build</span></div>`;
+
+// ---------------------------------------------------------------- screens
+const SCREENS = {};
+
+SCREENS.home = () => {
+  const c = counts(), sup = user.role==='supervisor';
+  return {title:'FMA', body:`
+    <div class="hello"><h2>Field Maintenance Assistant</h2><p>Welcome, ${esc(user.name)} — ${esc(ROLE[user.role])}</p></div>
+    ${S.equipment.length?'':safety('No equipment data. Load demo data from Profile.','info')}
+    ${sec('What do you need?')}
+    <div class="quick">
+      <button class="qbtn q-olive" data-a="maintain">${ic('build')}<span>MAINTAIN</span></button>
+      <button class="qbtn q-accent" data-a="go" data-s="reportFault">${ic('warning')}<span>REPORT FAULT</span></button>
+      <button class="qbtn q-khaki" data-a="go" data-s="tsSelect">${ic('handyman')}<span>TROUBLE&shy;SHOOT</span></button>
+    </div>
+    <div class="two">${btn('Scan equipment QR','go',{s:'qr'},'outline','qr_code_scanner')}${btn('Voice report','go',{s:'voice'},'outline','mic')}</div>
+    <div class="chain"><b>From fault reporting to guided field rectification</b><ol><li>Identify</li><li>Guided checks</li><li>Rectify</li><li>Record</li><li>Escalate only if required</li></ol></div>
+    ${sec('Equipment status',`<small>${S.equipment.length} items</small>`)}
+    <div class="stats">${stat('Operational',c.operational,'ok')}${stat('Under maintenance',c.underMaintenance,'info')}${stat('Fault reported',c.faultReported,'warn')}${stat('Critical',c.critical,'danger')}</div>
+    ${sec('Modules')}
+    ${mod('build','Equipment maintenance','Categories, profiles and status','go',{s:'equipment'})}
+    ${mod('warning','Report a fault','Six quick steps, saved on this device','go',{s:'reportFault'})}
+    ${mod('handyman','Troubleshooting','Guided YES / NO checks','go',{s:'tsSelect'})}
+    ${mod('checklist','Maintenance checklist','Daily check by equipment','maintain')}
+    ${mod('menu_book','Quick reference','Search equipment, safety and faults','go',{s:'reference'})}
+    ${mod('history','Maintenance history','Timeline of checks and repairs','go',{s:'history'})}
+    ${sup?mod('inventory','Spare parts','Required, available and pending','go',{s:'parts'}):''}
+    ${mod('psychology','AI assist','Future module — not active','go',{s:'ai'},'dim')}
+  `};
+};
+
+SCREENS.equipment = (p,st) => {
+  const qy = (st.q||'').trim().toLowerCase();
+  const res = qy ? S.equipment.filter(e=>(e.name+' '+e.id+' '+e.loc).toLowerCase().includes(qy)) : [];
+  return {title:'EQUIPMENT', body:`
+    <input id="eqsearch" class="inp search" type="search" placeholder="Search equipment name or ID" aria-label="Search equipment" data-bind="q" data-live="1" value="${esc(st.q||'')}">
+    ${btn('Scan equipment QR','go',{s:'qr'},'outline','qr_code_scanner')}
+    ${qy ? sec(`Results (${res.length})`) + (res.length ? res.map(e=>eqCard(e)).join('') : empty('search_off','No equipment matches. Check the name or ID.'))
+         : sec('Categories') + Object.keys(CATS).map(k=>{ const items=S.equipment.filter(e=>e.cat===k); const att=items.filter(e=>e.status!=='operational').length; return mod(CAT_IC[k],CATS[k],`${items.length} items${att?` · ${att} need attention`:''}`,'go',{s:'eqList',cat:k}); }).join('')}
+  `};
+};
+
+SCREENS.eqList = p => {
+  const items = S.equipment.filter(e=>e.cat===p.cat);
+  return {title:CATS[p.cat]||'EQUIPMENT', body: items.length ? items.map(e=>eqCard(e)).join('') : empty('inventory_2','No equipment in this category yet.')};
+};
+
+SCREENS.pickEq = p => {
+  const list = [...S.equipment].sort((a,b)=>a.name.localeCompare(b.name));
+  return {title:p.title||'SELECT EQUIPMENT', body: list.length ? list.map(e=>eqCard(e,'pickEq')).join('') : empty('inventory_2','No equipment available. Load demo data from Profile.')};
+};
+
+SCREENS.eqProfile = p => {
+  const e = eqById(p.id);
+  if(!e) return {title:'EQUIPMENT', body:empty('search_off','Equipment not found.')};
+  const faults = faultsSorted().filter(f=>f.eq===e.id);
+  const hist = S.maintenance.filter(m=>m.eq===e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const overdue = e.next && e.next < iso(Date.now());
+  return {title:'EQUIPMENT PROFILE', body:`
+    <div class="item" style="cursor:default"><span class="ibox">${ic(TYPE_IC[e.type]||'inventory_2')}</span><span class="grow"><b style="font-size:21px">${esc(e.name)}</b><small>${esc(e.id)}</small>${eqChip(e)}</span></div>
+    ${e.safety?safety():''}
+    <div class="card"><dl>
+      ${row('Equipment ID',e.id)}${row('Serial number',e.serial)}${row('Location',e.loc)}${row('User / section',e.section)}
+      ${row('Current status',eqChip(e),true)}${row('Last maintenance',fmtD(e.last))}
+      ${row('Next scheduled',`${fmtD(e.next)} ${overdue?chip('Overdue','danger'):''}`,true)}
+    </dl></div>
+    <div class="stack">
+      <div class="two" style="margin:0">${btn('Start maintenance','go',{s:'checklist',eq:e.id},'','build')}${btn('Report fault','go',{s:'reportFault',eq:e.id},'danger','warning')}</div>
+      <div class="two" style="margin:0">${btn('View checklist','go',{s:'checklist',eq:e.id},'outline','checklist')}${btn('View history','go',{s:'history',eq:e.id},'outline','history')}</div>
+      ${btn('Troubleshoot','go',{s:'tsSelect',eq:e.id},'outline','handyman')}
+    </div>
+    ${sec('Fault history',`<small>${faults.length}</small>`)}
+    ${faults.length ? faults.map(faultCard).join('') : `<p class="muted">No faults recorded.</p>`}
+    ${sec('Maintenance history')}
+    ${hist.length ? hist.map(m=>`<div class="card"><b>${esc(m.type)}</b> ${chip(m.status,'ok')}<p class="muted" style="margin:6px 0 0">${fmtD(m.date)} · ${esc(m.by)}<br>${esc(m.remarks)}</p></div>`).join('') : `<p class="muted">No maintenance recorded.</p>`}
+  `};
+};
+
+const RF_STEPS = ['Select equipment','Select fault type','Fault description','Severity','Location','Submit fault'];
+SCREENS.reportFault = (p,st) => {
+  if(!st.init) Object.assign(st,{init:1, eq:p.eq||null, ft:p.ft||null, desc:p.desc||'', step:p.eq?(p.ft?2:1):0, photo:false, voice:false, sev:null, loc:null, locManual:''});
+  const e = eqById(st.eq);
+  let body = `<div class="prog"><small>STEP ${st.step+1} OF 6</small><h2>${RF_STEPS[st.step]}</h2><div class="track"><i style="width:${(st.step+1)/6*100}%"></i></div></div>`;
+  if(st.step===0){
+    const list=[...S.equipment].sort((a,b)=>a.name.localeCompare(b.name));
+    body += list.length ? list.map(x=>eqCard(x,'rfEq',x.id===st.eq)).join('') : empty('inventory_2','No equipment available. Load demo data from Profile.');
+  } else if(st.step===1){
+    body += `<div class="grid2">${FAULT_TYPES.map(t=>`<button class="tile ${t===st.ft?'sel':''}" data-a="rfFt" data-v="${esc(t)}">${ic(FT_IC[t])}<span>${esc(t)}</span></button>`).join('')}</div>`;
+  } else if(st.step===2){
+    body += `<p class="muted" style="margin-top:0">${esc(e?e.name:'')} — ${esc(st.ft||'')}</p>
+      <label class="f">What did you observe?<textarea id="rfdesc" class="inp" data-bind="desc" placeholder="e.g. Engine cranks but does not start">${esc(st.desc)}</textarea></label>
+      <p class="muted">${st.ft===FT.other?'Description required for “Other”.':'Optional. Keep it short.'}</p>
+      ${sec('Attachments (optional)')}
+      <div class="grid2"><button class="tile ${st.photo?'sel':''}" data-a="rfPhoto">${ic('photo_camera')}<span>${st.photo?'Photo added':'Take photo'}</span></button>
+      <button class="tile ${st.voice?'sel':''}" data-a="rfVoice">${ic('mic')}<span>${st.voice?'Voice note added':'Voice note'}</span></button></div>
+      <p class="muted">Camera and microphone capture are placeholders in this prototype.</p>`;
+  } else if(st.step===3){
+    body += Object.keys(SEVT).map(s=>`<button class="sevbtn sev-${s} ${st.sev===s?'sel':''}" style="--tone:var(--${SEVT[s]})" data-a="rfSev" data-v="${s}"><b>${s.toUpperCase()}</b><span>${SEV_HINT[s]}</span></button>`).join('');
+  } else if(st.step===4){
+    const cur = (st.locManual||'').trim() ? null : (st.loc || (e&&e.loc));
+    const opts = [...new Set([e&&e.loc, ...LOCATIONS].filter(Boolean))];
+    body += `<p class="muted" style="margin-top:0">Predefined location</p>
+      ${opts.map(l=>`<button class="loc ${l===cur?'sel':''}" data-a="rfLoc" data-v="${esc(l)}">${ic('location_on')}<span>${esc(l)}</span>${l===cur?ic('check_circle'):''}</button>`).join('')}
+      <label class="f" style="margin-top:14px">Manual entry<input id="rfloc" class="inp" data-bind="locManual" placeholder="Type a location" value="${esc(st.locManual)}"></label>`;
+  } else {
+    const loc = (st.locManual||'').trim() || st.loc || (e&&e.loc);
+    body += `<div class="card"><dl>${row('Equipment',e?e.name:'—')}${row('Equipment ID',e?e.id:'—')}${row('Fault type',st.ft)}${row('Description',st.desc.trim()||'—')}${row('Severity',st.sev?sevChip(st.sev):'—',true)}${row('Location',loc)}${row('Attachments',[st.photo&&'Photo',st.voice&&'Voice note'].filter(Boolean).join(', ')||'None')}${row('Reported by',user.name)}</dl></div>
+      ${e&&e.safety?safety():''}
+      ${btn(st.busy?'Saving…':'Submit fault','rfSubmit',{},'','send',st.busy)}`;
+  }
+  return {title:'REPORT FAULT', back:'rfExit', backIcon:'close', body,
+    foot: btn('Back','rfBack',{},'outline','arrow_back',st.busy) + (st.step<5 ? btn('Next','rfNext',{},'','arrow_forward') : btn('Submit','rfSubmit',{},'','send',st.busy))};
+};
+
+SCREENS.outcome = p => {
+  const f = faultById(p.id);
+  const K = {
+    recorded:{icon:'check_circle',tone:'ok',title:'Fault recorded',msg:'Saved on this device. Start guided checks now to try to restore the equipment.'},
+    escalated:{icon:'engineering',tone:'warn',title:'Escalated',msg:'Sent to the technician dashboard. Do not attempt further repair. Keep the equipment safe and switched off.'},
+    restored:{icon:'verified',tone:'ok',title:'Equipment restored',msg:'Fault resolved at user level. Maintenance history updated.'}
+  }[p.kind] || {icon:'check_circle',tone:'ok',title:'Done',msg:''};
+  return {title:K.title.toUpperCase(), back:'home', backIcon:'close', body:`
+    <div class="outcome t-${K.tone}">${ic(K.icon)}<h2>${esc(K.title)}</h2><p>${esc(K.msg)}</p></div>
+    ${f?`<div class="card"><p class="muted" style="margin:0">Fault ID</p><div class="bigid">${esc(f.id)}</div><dl>${row('Equipment',f.eqName)}${row('Fault',f.type)}${row('Severity',sevChip(f.sev),true)}${row('Status',fChip(f),true)}</dl></div>`:''}
+    <div class="stack">
+      ${p.kind==='recorded'&&f&&isOpen(f)?btn('Start guided troubleshooting','startTs',{id:f.id},'','handyman'):''}
+      ${f?btn('View fault details','replace',{s:'faultDetail',id:f.id},'outline','assignment'):''}
+      ${btn('Return home','home',{},'outline','home')}
+    </div>`};
+};
+
+SCREENS.tsSelect = (p,st) => {
+  if(st.eq===undefined) st.eq = p.eq || null;
+  const e = eqById(st.eq);
+  if(!e) return {title:'TROUBLESHOOTING', body: sec('Step 1 · Select equipment') + [...S.equipment].sort((a,b)=>a.name.localeCompare(b.name)).map(x=>eqCard(x,'tsEq')).join('')};
+  const specific = TREES.filter(t=>t.type===e.type).map(t=>t.fault);
+  const others = FAULT_TYPES.filter(t=>!specific.includes(t));
+  return {title:'TROUBLESHOOTING', body:`
+    ${eqCard(e,'tsChange',true)}<p class="muted" style="margin-top:-4px">Tap the equipment to change it.</p>
+    ${sec('Step 2 · What is the problem?')}
+    ${specific.map(t=>mod(FT_IC[t]||'help',t,'Guided decision tree','tsStart',{v:t})).join('')}
+    ${sec('Other problems — basic checks')}
+    ${others.map(t=>mod(FT_IC[t]||'help',t,'Generic authorised basic checks','tsStart',{v:t})).join('')}`};
+};
+
+const curNode = st => st.tree.nodes[st.path[st.path.length-1]] || MISSING_NODE;
+const stopPanel = (text,busy) => `<div class="stop">${ic('dangerous')}<h3>Stop user-level troubleshooting</h3><h4>Escalate to authorised technician</h4><p>${esc(text)}</p>${btn(busy?'Escalating…':'Escalate to technician','tsEscalate',{},'danger','engineering',busy)}</div>`;
+const resOpt = (label,icon,tone,act,hl) => `<button class="ropt t-${tone} ${hl?'hl':''}" data-a="${act}">${ic(icon)}<b>${esc(label)}</b>${hl?'<small>SUGGESTED</small>':''}</button>`;
+SCREENS.ts = (p,st) => {
+  const e = eqById(p.eq);
+  if(!st.tree){ st.tree = findTree(e?e.type:'*', p.ft); st.path=[st.tree.start]; st.log=[]; st.persists=false; }
+  const node = curNode(st);
+  let acts = '';
+  if(node.k==='q') acts = `<div class="yn"><button class="yes" data-a="tsAns" data-v="1">${ic('check_circle')}YES</button><button class="no" data-a="tsAns" data-v="0">${ic('cancel')}NO</button></div>`;
+  else if(node.k==='a') acts = btn('Done — next step','tsNext',{},'','task_alt');
+  else if(node.k==='s') acts = stopPanel(node.h||'This check needs specialist intervention.', st.busy);
+  else acts = st.persists ? stopPanel('Fault persists after authorised user-level checks.', st.busy)
+    : sec('Result') + resOpt('Fault resolved','check_circle','ok','tsResolve',node.o==='resolved') + resOpt('Fault persists','report_problem','warn','tsPersist',node.o==='persists') + resOpt('Escalate to technician','engineering','danger','tsEscalate',false);
+  const kind = {q:'CHECK',a:'ACTION',s:'STOP',o:'RESULT'}[node.k];
+  return {title:'GUIDED TROUBLESHOOTING', back:'tsExit', backIcon:'close', body:`
+    <div class="item" style="cursor:default;margin-bottom:6px"><span class="ibox">${ic(TYPE_IC[e&&e.type]||'handyman')}</span><span class="grow"><b>${esc(e?e.name:'Equipment')}</b><small>${esc(p.ft)}</small>${p.fid?chip(p.fid,'accent'):chip('No fault ID yet','muted')}</span></div>
+    ${st.tree.safety||(e&&e.safety)?safety():''}
+    <div class="step k-${node.k}"><div class="steph"><span class="stepn">STEP ${st.path.length}</span><span class="kind">${kind}</span></div>
+      <p class="stept">${esc(node.t)}</p>${node.h&&node.k!=='s'?`<p class="hint">${ic('info')}<span>${esc(node.h)}</span></p>`:''}</div>
+    ${acts}
+    ${st.log.length?sec('Checks completed')+`<ol class="log">${st.log.map(l=>`<li>${esc(l)}</li>`).join('')}</ol>`:''}`,
+    foot: btn('Back','tsBack',{},'outline','arrow_back',!(st.path.length>1||st.persists)||st.busy) + btn('Next','tsNext',{},'','arrow_forward',node.k!=='a'||st.busy) + btn('Exit','tsExit',{},'outline','logout',st.busy)};
+};
+
+const FILTERS = [['open','Open'],['escalated','Escalated'],['resolved','Resolved'],['all','All']];
+const fMatch = (f,k) => k==='open'?isOpen(f):k==='escalated'?f.status==='escalated':k==='resolved'?!isOpen(f):true;
+SCREENS.faults = (p,st) => {
+  st.f = st.f || 'open';
+  const all = faultsSorted(), list = all.filter(f=>fMatch(f,st.f));
+  return {title:'FAULTS', body:`
+    ${btn('Report fault','go',{s:'reportFault'},'','warning')}
+    <div class="filters" style="margin-top:12px">${FILTERS.map(([k,l])=>`<button class="fchip ${st.f===k?'on':''}" data-a="fFilter" data-v="${k}">${l} (${all.filter(f=>fMatch(f,k)).length})</button>`).join('')}</div>
+    ${list.length?list.map(faultCard).join(''):empty('task_alt','No faults in this list.')}`};
+};
+
+function faultActions(f){
+  const r=user.role, s=f.status, out=[];
+  const B = (l,act,cls,icon) => out.push(btn(l,act,{id:f.id},cls,icon));
+  if(r!=='technician' && s==='reported'){ B('Start guided troubleshooting','startTsPush','','handyman'); B('Escalate to technician','fEscalate','danger','engineering'); }
+  if(r==='supervisor' && isOpen(f)) B(f.assigned?'Reassign technician':'Assign technician','fAssign','outline','assignment_ind');
+  if(r==='supervisor' && s==='resolved') B('Verify and close fault','fClose','','lock');
+  if(r==='technician'){
+    if(s==='reported'||s==='escalated') B('Accept fault','fAccept','','assignment_turned_in');
+    if(s==='underInspection') B('Start repair','fStart','','build');
+    if(s==='awaitingPart') B('Part received — resume repair','fPartRecv','','inventory');
+    if(['underInspection','underRepair','awaitingPart'].includes(s)){
+      B('Record repair action','fAction','outline','edit_note');
+      B('Add part used','fUsePart','outline','add_box');
+      if(s!=='awaitingPart') B('Mark awaiting part','fAwait','outline','hourglass_top');
+      B('Add remarks','fRemark','outline','comment');
+      B('Mark resolved','fResolve','ok','verified');
+    }
+  }
+  return out.length ? `<div class="stack">${out.join('')}</div>` : `<p class="muted">${isOpen(f)?'No actions for your role at this stage.':`This fault is ${FS[s][0].toLowerCase()}. No further action required.`}</p>`;
+}
+SCREENS.faultDetail = p => {
+  const f = faultById(p.id);
+  if(!f) return {title:'FAULT', body:empty('search_off','Fault record not found.')};
+  const e = eqById(f.eq);
+  return {title:f.id, body:`
+    <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><b style="font:800 22px/1.1 'Barlow Condensed',sans-serif;letter-spacing:.04em;text-transform:uppercase">${esc(f.type)}</b>${sevChip(f.sev)}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${fChip(f)}${f.partReq?chip('Part required','high'):''}</div></div>
+    ${f.sev==='critical'||(e&&e.safety)?safety():''}
+    ${sec('Actions')}${faultActions(f)}
+    ${sec('Details')}
+    <div class="card"><dl>
+      ${row('Equipment',e?`<button class="acc" style="background:none;border:0;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--accent);font-weight:700" data-a="go" data-s="eqProfile" data-id="${esc(e.id)}">${esc(f.eqName)} ›</button>`:esc(f.eqName),true)}
+      ${row('Equipment ID',f.eq)}${row('Description',f.desc)}${row('Location',f.loc)}${row('Reported by',f.by)}${row('Reported',fmtDT(f.at))}
+      ${row('Assigned to',f.assigned||'Not assigned')}${f.partReq?row('Part required',f.partReq):''}
+      ${row('Attachments',[f.photo&&'Photo (placeholder)',f.voice&&'Voice note (placeholder)'].filter(Boolean).join(', ')||'None')}
+      ${f.resolvedAt?row('Resolved',fmtDT(f.resolvedAt)):''}
+    </dl></div>
+    ${f.log.length?sec('Guided checks log')+`<div class="card"><ol class="log">${f.log.map(l=>`<li>${esc(l)}</li>`).join('')}</ol></div>`:''}
+    ${f.action||f.parts.length||f.remarks.length?sec('Technician work')+`<div class="card"><dl>${f.action?row('Repair action',f.action):''}${f.parts.length?row('Parts used',f.parts.join('\n')):''}${f.remarks.length?row('Remarks',f.remarks.join('\n')):''}</dl></div>`:''}
+    ${sec('Status history')}
+    <div class="card">${[...f.history].reverse().map(h=>`<div style="display:flex;gap:10px;padding:7px 0"><span class="t-${FS[h.s][1]}" style="width:12px;height:12px;border-radius:50%;background:var(--tone);margin-top:5px;flex:none"></span><div><b>${FS[h.s][0]}</b> <span class="muted">· ${fmtDT(h.at)}</span><div class="muted">${esc(h.note||'')} — ${esc(h.by)}</div></div></div>`).join('')}</div>`};
+};
+
+SCREENS.tasks = (p,st) => {
+  st.b = st.b || 'new';
+  const list = bucket(st.b), lbl = BUCKETS.find(b=>b[0]===st.b)[1];
+  const T = ([k,l,tone]) => stat(l,bucket(k).length,tone,'tBucket',{v:k},st.b===k);
+  return {title:'TECHNICIAN TASKS', body:`
+    <div class="hello"><h2>Welcome, ${esc(user.name)}</h2><p>Escalated faults arrive here automatically.</p></div>
+    ${sec('Task status')}
+    <div class="stats three">${BUCKETS.slice(0,3).map(T).join('')}</div>
+    <div class="stats" style="margin-top:10px">${BUCKETS.slice(3).map(T).join('')}</div>
+    ${sec(`${lbl} (${list.length})`)}
+    ${list.length?list.map(faultCard).join(''):empty('task_alt','No faults in this list.')}
+    ${sec('Tools')}
+    ${mod('inventory','Spare parts',`${S.parts.length} part lines`,'go',{s:'parts'})}
+    ${mod('menu_book','Quick reference','Safety, faults and procedures','go',{s:'reference'})}`};
+};
+
+SCREENS.dashboard = () => {
+  const c=counts(), now=iso(Date.now());
+  const over = S.equipment.filter(e=>e.next && e.next<now);
+  const req = S.faults.filter(f=>isOpen(f)&&f.partReq);
+  const avail = S.parts.filter(x=>x.qty>0).length;
+  const pend = req.filter(f=>{ const x=S.parts.find(y=>y.name===f.partReq); return !x||x.qty<=0; }).length;
+  const done = S.faults.filter(f=>f.resolvedAt);
+  const mttr = done.length ? done.reduce((s,f)=>s+(Date.parse(f.resolvedAt)-Date.parse(f.at)),0)/done.length : null;
+  const freq = {}; S.faults.forEach(f=>{ freq[f.type]=(freq[f.type]||0)+1; });
+  const topF = Object.entries(freq).sort((x,y)=>y[1]-x[1])[0];
+  const rec = {}; S.faults.forEach(f=>{ const k=f.eq+'|'+f.type; (rec[k] = rec[k] || {name:f.eqName,type:f.type,n:0}).n++; });
+  const recurring = Object.values(rec).filter(r=>r.n>=2);
+  return {title:'SUPERVISOR DASHBOARD', body:`
+    ${sec('Equipment state')}
+    <div class="stats">${stat('Total equipment',S.equipment.length,'olive')}${stat('Operational',c.operational,'ok')}${stat('Fault reported',c.faultReported,'warn')}${stat('Under maintenance',c.underMaintenance,'info')}${stat('Critical',c.critical,'danger')}${stat('Overdue maintenance',over.length,'high','overdue')}</div>
+    ${sec('Spare parts')}
+    <div class="stats three">${stat('Parts required',req.length,'high','go',{s:'parts'})}${stat('Parts available',avail,'ok','go',{s:'parts'})}${stat('Parts pending',pend,'danger','go',{s:'parts'})}</div>
+    ${sec('Performance')}
+    <div class="card"><dl>${row('Open faults',S.faults.filter(isOpen).length)}${row('Avg repair time',mttr==null?'—':fmtDur(mttr))}${row('Most frequent',topF?`${topF[0]} (${topF[1]})`:'—')}</dl></div>
+    ${sec('Recurring faults')}
+    ${recurring.length?recurring.map(r=>`<div class="item" style="cursor:default"><span class="ibox" style="color:var(--high)">${ic('repeat')}</span><span class="grow"><b>${esc(r.name)}</b><small>${esc(r.type)}</small></span>${chip('×'+r.n,'high')}</div>`).join(''):'<p class="muted">No recurring faults.</p>'}
+    ${sec('Recent faults')}
+    ${faultsSorted().slice(0,8).map(faultCard).join('')||empty('task_alt','No faults recorded.')}`};
+};
+
+SCREENS.parts = () => {
+  const req = S.faults.filter(f=>isOpen(f)&&f.partReq);
+  const avail = S.parts.filter(x=>x.qty>0).length;
+  const pend = req.filter(f=>{ const x=S.parts.find(y=>y.name===f.partReq); return !x||x.qty<=0; }).length;
+  const av = x => x.qty<=0?['Out of stock','danger']:x.qty<=2?['Low stock','warn']:['Available','ok'];
+  return {title:'SPARE PARTS', body:`
+    <div class="stats three">${stat('Required',req.length,'high')}${stat('Available',avail,'ok')}${stat('Pending',pend,'danger')}</div>
+    ${req.length?sec('Part required')+req.map(f=>`<button class="item" data-a="go" data-s="faultDetail" data-id="${esc(f.id)}"><span class="ibox" style="color:var(--high)">${ic('report')}</span><span class="grow"><b>${esc(f.partReq)}</b><small>${esc(f.id)} · ${esc(f.eqName)}</small></span><span class="chev">${ic('chevron_right')}</span></button>`).join(''):''}
+    ${sec(`Inventory (${S.parts.length})`)}
+    ${S.parts.map(x=>{ const [l,t]=av(x); return `<div class="card"><div style="display:flex;justify-content:space-between;gap:10px"><b style="font-size:17px">${esc(x.name)}</b>${chip(l,t)}</div><p style="margin:6px 0 2px;font-weight:700">Part no: ${esc(x.no)} · Qty: ${x.qty}</p><p class="muted" style="margin:0">${esc(x.equipment)} · ${esc(x.loc)}</p></div>`; }).join('')||empty('inventory','No spare parts recorded.')}`};
+};
+
+SCREENS.history = p => {
+  const e = p.eq ? eqById(p.eq) : null;
+  const list = S.maintenance.filter(m=>!p.eq||m.eq===p.eq).sort((a,b)=>b.date.localeCompare(a.date));
+  return {title:'MAINTENANCE HISTORY', body:`
+    ${e?`<p class="muted" style="margin-top:0">${esc(e.name)} (${esc(e.id)})</p>`:''}
+    ${list.length?`<div>${list.map(m=>{ const d=new Date(m.date); const tone=m.status==='Resolved'?'ok':'olive'; const link=m.faultId&&faultById(m.faultId);
+      return `<div class="tl"><div class="tld"><b>${p2(d.getDate())} ${MONTHS[d.getMonth()]}</b><small>${d.getFullYear()}</small></div><div class="tlr t-${tone}"><i></i></div><div class="tlc">
+        <${link?'button':'div'} class="card" ${link?`data-a="go" data-s="faultDetail" data-id="${esc(m.faultId)}" style="cursor:pointer"`:''}>
+          <b style="font-size:17px">${esc(m.eqName)}</b>
+          <p class="acc">${esc(m.type)}${m.faultType?' · '+esc(m.faultType):''}</p>
+          <p>${esc(m.remarks)}</p>
+          <div class="meta"><span class="muted">By ${esc(m.by)}</span>${chip(m.status,tone==='ok'?'ok':'olive')}</div>
+        </${link?'button':'div'}></div></div>`; }).join('')}</div>`:empty('history','No maintenance records yet.')}`};
+};
+
+SCREENS.checklist = (p,st) => {
+  const e = eqById(p.eq);
+  if(!e) return {title:'CHECKLIST', body:empty('search_off','Equipment not found.')};
+  if(!st.cl) st.cl = checklistFor(e);
+  const cl = st.cl, n = cl.items.filter(i=>i.c).length;
+  return {title:'MAINTENANCE CHECKLIST', body:`
+    <div class="item" style="cursor:default"><span class="ibox">${ic(TYPE_IC[e.type]||'inventory_2')}</span><span class="grow"><b>${esc(e.name)}</b><small>Daily check · ${fmtD(Date.now())}</small></span><b style="font:800 26px 'Barlow Condensed',sans-serif;color:var(--accent)">${n}/${cl.items.length}</b></div>
+    <div class="track" style="margin-bottom:8px"><i style="width:${n/cl.items.length*100}%"></i></div>
+    ${cl.updated?`<p class="muted">Saved progress from ${fmtDT(cl.updated)}</p>`:''}
+    ${e.safety?safety():''}
+    ${cl.items.map((it,i)=>`<button class="chk ${it.c?'on':''}" data-a="clToggle" data-v="${i}" aria-pressed="${it.c}">${ic(it.c?'check_box':'check_box_outline_blank')}<span>${esc(it.l)}</span></button>`).join('')}
+    <div style="margin-top:12px">${btn('Report fault','go',{s:'reportFault',eq:e.id},'ghost-danger','warning')}</div>`,
+    foot: btn('Save','clSave',{},'outline','save') + btn('Complete check','clDone',{},'','task_alt')};
+};
+
+SCREENS.reference = (p,st) => {
+  const qy=(st.q||'').trim().toLowerCase(), cat=st.cat||'';
+  const list = REFS.filter(r=>(!cat||r.cat===cat) && (!qy || (r.title+' '+r.cat+' '+r.tags+' '+r.points.join(' ')).toLowerCase().includes(qy)));
+  return {title:'QUICK REFERENCE', body:`
+    <input id="refsearch" class="inp search" type="search" placeholder="Search equipment or fault..." aria-label="Search reference" data-bind="q" data-live="1" value="${esc(st.q||'')}">
+    <div class="filters"><button class="fchip ${!cat?'on':''}" data-a="refCat" data-v="">All</button>${REF_CATS.map(c=>`<button class="fchip ${cat===c?'on':''}" data-a="refCat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    ${safety('Generic sample reference. Always follow authorised manuals and SOPs.','info')}
+    ${list.length?list.map(r=>`<details class="ref"><summary><span class="ibox">${ic(REF_IC[r.cat])}</span><span class="grow"><b>${esc(r.title)}</b><small>${esc(r.cat)}</small></span><span class="chev">${ic('chevron_right')}</span></summary><ul>${r.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join(''):empty('search_off','No entries match. Try another word.')}`};
+};
+
+SCREENS.qr = (p,st) => ({title:'SCAN EQUIPMENT QR', body:`
+  <div class="finder">${ic('qr_code_2')}</div>
+  <p class="muted center">Camera scanning will be connected in a future version. Use simulate scan for demonstration.</p>
+  ${btn('Simulate scan','qrSim',{},'','qr_code_scanner')}
+  ${sec('Or enter equipment ID')}
+  <input id="qrid" class="inp" data-bind="id" placeholder="e.g. EQ-GEN-01" value="${esc(st.id||'')}" autocapitalize="characters">
+  <div style="margin-top:10px">${btn('Open equipment','qrOpen',{},'outline','open_in_new')}</div>
+  ${sec('Future workflow')}
+  <ol class="flowlist"><li>Scan QR</li><li>Equipment identified</li><li>Equipment profile</li><li>Fault history</li><li>Maintenance checklist</li><li>Troubleshooting</li></ol>`});
+
+const VOICE_SAMPLES = ['Generator is not starting','Water pump 01 is leaking','Radio set 02 communication failure','Utility vehicle 01 is overheating'];
+SCREENS.voice = (p,st) => {
+  const r = (st.t||'').trim() ? parseVoice(st.t) : null;
+  return {title:'VOICE REPORT', body:`
+    <button class="mic ${st.listening?'on':''}" data-a="listen" ${st.listening?'disabled':''} aria-label="Speak">${ic('mic')}</button>
+    <p class="center" style="font:800 18px 'Barlow Condensed',sans-serif;letter-spacing:.08em">${st.listening?'LISTENING…':'TAP TO SPEAK (SIMULATED)'}</p>
+    <label class="f">What you said (you can also type)<textarea id="vtext" class="inp" data-bind="t" data-live="1" placeholder="e.g. Generator is not starting">${esc(st.t||'')}</textarea></label>
+    ${r?`<div class="card"><dl>${row('Equipment',r.eq?r.eq.name:'Not recognised')}${row('Fault',r.ft||'Not recognised')}</dl></div>`:''}
+    ${btn('Continue to report fault','voiceGo',{},'','arrow_forward',!r)}
+    <p class="muted">Speech recognition is simulated in this version. The text is matched to equipment and fault type automatically.</p>`};
+};
+
+SCREENS.ai = () => ({title:'AI ASSIST', body:`
+  <div class="card"><b style="font:800 20px 'Barlow Condensed',sans-serif;letter-spacing:.05em">AI ASSIST — FUTURE MODULE</b> ${chip('Not active','muted')}<p class="muted" style="margin:8px 0 0">Planned workflow for a connected version:</p></div>
+  <ol class="flowlist"><li>User input</li><li>Equipment</li><li>Observed symptoms</li><li>Previous maintenance history</li><li>AI-assisted analysis</li><li>Possible causes</li><li>Authorised troubleshooting pathway</li><li>Escalation if required</li></ol>
+  ${safety('AI must not replace authorised technical manuals, SOPs or qualified technicians.','danger')}`});
+
+SCREENS.profile = () => {
+  const light = document.documentElement.dataset.theme==='light';
+  return {title:'PROFILE', body:`
+    <div class="item" style="cursor:default"><span class="ibox" style="border-radius:50%">${ic('person')}</span><span class="grow"><b style="font-size:20px">${esc(user.name)}</b><small>ID: ${esc(user.id)}</small>${chip(ROLE[user.role],'accent')}</span></div>
+    ${sec('System status')}
+    <div class="card"><dl>${row('Network','Offline mode — no connection needed')}${row('Storage',saveIssue?'Save issue — data kept for this session':'Saved on this device')}${row('Records',`${S.equipment.length} equipment · ${S.faults.length} faults · ${S.maintenance.length} maintenance`)}${row('Cloud sync','Not connected (future version)')}${row('Version','FMA 1.0 prototype')}</dl></div>
+    ${sec('Display')}
+    ${btn(light?'Switch to night (dark) mode':'Switch to sunlight mode','theme',{},'outline',light?'dark_mode':'light_mode')}
+    ${sec('Demo mode')}
+    <p class="muted" style="margin-top:0">Loads sample equipment, faults, spares and history so the app can be demonstrated without data entry.</p>
+    <div class="stack">${btn('Load demo data','demo',{},'','play_circle')}${btn('Clear all data','clearAll',{},'ghost-danger','delete_forever')}</div>
+    ${sec('Future modules')}
+    ${mod('psychology','AI assist','Architecture placeholder','go',{s:'ai'})}
+    ${mod('cloud_off','Cloud sync','Local data → sync → central database','syncInfo')}
+    <div style="margin-top:16px">${btn('Logout / switch role','logout',{},'outline','logout')}</div>`};
+};
+
+// --------------------------------------------------------------- rendering
+function viewKey(){ if(phase==='splash') return 'splash'; if(!user) return 'login'; const t=top(); return JSON.stringify([stack.length, t?t.s:'tab'+tab, t&&t.st.step, t&&t.st.path&&t.st.path.length, t&&t.st.persists]); }
+function render(){
+  const ae = document.activeElement;
+  const fid = ae && ae.id && $app.contains(ae) ? ae.id : null;
+  let sel = null; try { if(fid && ae.selectionStart!=null) sel=[ae.selectionStart,ae.selectionEnd]; } catch(e){}
+  const key = viewKey(), main = document.getElementById('main');
+  const sc = main && key===lastKey ? main.scrollTop : 0;
+
+  if(phase==='splash'){
+    $app.innerHTML = `<div class="splash">${logo()}<h1 class="brand">Field Maintenance<br>Assistant</h1><p class="brand-short">FMA</p><p class="tag">Diagnose. Maintain. Restore.</p><div class="bar2"><i></i></div></div>`;
+  } else if(!user){
+    const L = loginState;
+    $app.innerHTML = `<div class="login"><div class="head">${logo('logo')}<h1 class="brand">Field Maintenance Assistant</h1><p class="brand-short">FMA</p><p class="tag">Diagnose. Maintain. Restore.</p><span class="pill"><i></i>Offline mode available</span></div>
+      <label class="f">Service / User ID<input id="uid" class="inp" data-bind="uid" data-after="uidChanged" autocomplete="username" autocapitalize="characters" value="${esc(L.uid)}" placeholder="FMA001"></label>
+      <label class="f">Password<input id="pw" class="inp" type="password" data-bind="pw" autocomplete="current-password" value="${esc(L.pw)}" placeholder="••••"></label>
+      <label class="f">Role<select id="role" class="inp" data-bind="role">${Object.entries(ROLE).map(([k,v])=>`<option value="${k}" ${L.role===k?'selected':''}>${v}</option>`).join('')}</select></label>
+      ${L.err?`<p class="err" role="alert">${esc(L.err)}</p>`:''}
+      <div class="stack">${btn('Login','login',{},'','login')}${btn('Offline mode','offline',{},'outline','cloud_off')}</div>
+      <div class="demo"><b>Demo accounts</b> (password <b>1234</b>)<br>FMA001 — Field User<br>FMA002 — JCO / Supervisor<br>FMA003 — Technician<br><br>Press and hold the logo to reload demo data.</div></div>`;
+    bindLogoHold();
+  } else {
+    const t = top(), tabs = TABS[user.role];
+    let v;
+    try { v = t ? SCREENS[t.s](t.p, t.st) : SCREENS[tabs[tab][0]]({}, curState()); }
+    catch(err){ console.error(err); v = {title:'FMA', body:empty('error','This screen could not be displayed. Go back and try again.')}; }
+    const backAct = t ? (v.back||'back') : null;
+    $app.innerHTML = `<header class="bar">${backAct?`<button class="iconbtn" data-a="${backAct}" aria-label="Back">${ic(v.backIcon||'arrow_back')}</button>`:''}<h1>${esc(v.title)}</h1><span class="offline ${saveIssue?'warn':''}"><i></i>${saveIssue?'SAVE ISSUE':'OFFLINE MODE'}</span></header>
+      <main id="main">${v.body}</main>
+      ${v.foot?`<div class="footer">${v.foot}</div>`:''}
+      ${t?'':`<nav class="tabs">${tabs.map(([k,l,icon],i)=>`<button class="tab ${i===tab?'on':''}" data-a="tab" data-v="${i}" aria-current="${i===tab}">${ic(icon)}<span>${l}</span></button>`).join('')}</nav>`}`;
+  }
+  lastKey = key;
+  const m2 = document.getElementById('main'); if(m2) m2.scrollTop = sc;
+  if(fid){ const el=document.getElementById(fid); if(el){ el.focus({preventScroll:true}); if(sel) try{ el.setSelectionRange(sel[0],sel[1]); }catch(e){} } }
+}
+
+// ------------------------------------------------------- modal & toast
+let mres = null, toastT = null;
+function openModal(html){ return new Promise(res=>{ mres=res; const m=document.getElementById('modal'); m.innerHTML=`<div class="backdrop" data-a="mbg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`; m.hidden=false; const f=m.querySelector('textarea'); if(f) f.focus(); }); }
+function closeModal(v){ const m=document.getElementById('modal'); m.hidden=true; m.innerHTML=''; const r=mres; mres=null; if(r) r(v); }
+const confirmBox = (title,msg,label='Confirm',danger=false) => openModal(`<h2>${esc(title)}</h2><p>${esc(msg)}</p><div class="mact">${btn('Cancel','mclose',{v:''},'outline')}${btn(label,'mclose',{v:'1'},danger?'danger':'')}</div>`).then(v=>!!v);
+const promptBox = (title,hint,init='') => openModal(`<h2>${esc(title)}</h2><textarea id="mtext" class="inp" placeholder="${esc(hint)}">${esc(init)}</textarea><p class="merr" id="merr"></p><div class="mact">${btn('Cancel','mclose',{v:''},'outline')}${btn('Save','mok')}</div>`).then(v=>v||null);
+const pickBox = (title,items) => openModal(`<h2>${esc(title)}</h2>${items.map((it,i)=>`<button class="pick" data-a="mclose" data-v="${i}"><b>${esc(it.label)}</b>${it.sub?`<small>${esc(it.sub)}</small>`:''}</button>`).join('')}${btn('Cancel','mclose',{v:''},'outline')}`).then(v=>v===''||v==null?null:items[Number(v)]);
+function toast(m,bad=false){ const t=document.getElementById('toast'); t.innerHTML=ic(bad?'error':'check_circle')+`<span>${esc(m)}</span>`; t.className='toast show'+(bad?' bad':''); clearTimeout(toastT); toastT=setTimeout(()=>{ t.className='toast'+(bad?' bad':''); },2800); }
+
+function bindLogoHold(){
+  const el = document.getElementById('logo'); if(!el) return;
+  let timer = null;
+  const start = () => { timer = setTimeout(()=>{ seed(); toast('Demo mode: sample data loaded.'); }, 900); };
+  const end = () => clearTimeout(timer);
+  el.addEventListener('pointerdown', start); ['pointerup','pointerleave','pointercancel'].forEach(t=>el.addEventListener(t,end));
+  el.addEventListener('contextmenu', e=>e.preventDefault());
+}
+
+// ----------------------------------------------------------------- actions
+const A = {};
+const done = (msg) => { if(msg) toast(msg); render(); };
+A.back = () => back();
+A.home = () => home();
+A.go = d => go(d.s, {id:d.id, eq:d.eq, cat:d.cat});
+A.replace = d => replace(d.s, {id:d.id});
+A.tab = d => { tab = Number(d.v); stack = []; render(); };
+A.mclose = d => closeModal(d.v===undefined ? null : d.v);
+A.mbg = (d,el,ev) => { if(ev.target===el) closeModal(null); };
+A.mok = () => { const v=document.getElementById('mtext').value.trim(); if(!v){ document.getElementById('merr').textContent='This field cannot be empty.'; return; } closeModal(v); };
+
+// login
+A.uidChanged = (d,el) => { const u=USERS[el.value.trim().toUpperCase()]; if(u && loginState.role!==u.role){ loginState.role=u.role; render(); } };
+A.login = () => {
+  const L = loginState, id = L.uid.trim().toUpperCase();
+  if(!id || !L.pw){ L.err='Enter Service/User ID and Password.'; render(); return; }
+  const u = USERS[id];
+  if(!u || u.pw!==L.pw){ L.err='Invalid User ID or Password. Demo password is 1234.'; render(); return; }
+  user = {id, name:u.name, role:L.role}; L.err=''; L.pw=''; tab=0; stack=[]; tabState={}; render();
+};
+A.offline = () => { user = {id:'OFFLINE', name:'Offline User', role:loginState.role}; tab=0; stack=[]; tabState={}; render(); toast('Offline mode: working with data on this device.'); };
+A.logout = () => { user=null; stack=[]; tab=0; tabState={}; render(); };
+
+// home / equipment
+A.maintain = () => go('pickEq', {next:'checklist', title:'SELECT EQUIPMENT'});
+A.pickEq = d => replace(top().p.next, {eq:d.id});
+
+// report fault wizard
+A.rfEq = d => { const st=curState(); st.eq=d.id; st.loc=null; st.step=1; render(); };
+A.rfFt = d => { const st=curState(); st.ft=d.v; st.step=2; render(); };
+A.rfSev = d => { const st=curState(); st.sev=d.v; st.step=4; render(); };
+A.rfLoc = d => { const st=curState(); st.loc=d.v; st.locManual=''; render(); };
+A.rfPhoto = () => { const st=curState(); st.photo=!st.photo; toast(st.photo?'Photo placeholder attached (camera pending).':'Photo removed.'); render(); };
+A.rfVoice = () => { const st=curState(); st.voice=!st.voice; toast(st.voice?'Voice note placeholder attached.':'Voice note removed.'); render(); };
+function rfValidate(st){
+  const e = eqById(st.eq);
+  if(st.step===0 && !e) return 'Select the equipment.';
+  if(st.step===1 && !st.ft) return 'Select the fault type.';
+  if(st.step===2 && st.ft===FT.other && !st.desc.trim()) return 'Describe the fault (required for “Other”).';
+  if(st.step===3 && !st.sev) return 'Select severity.';
+  if(st.step===4 && !((st.locManual||'').trim() || st.loc || (e&&e.loc))) return 'Select or enter a location.';
+  return null;
+}
+A.rfNext = () => { const st=curState(); const m=rfValidate(st); if(m){ toast(m,true); return; } st.step++; render(); };
+A.rfBack = () => { const st=curState(); if(st.step===0) return A.rfExit(); st.step--; render(); };
+A.rfExit = async () => { const st=curState(); if(st.step>0 || st.desc){ if(!await confirmBox('Exit without saving?','The fault has not been recorded yet.','Exit',true)) return; } back(); };
+A.rfSubmit = async (d, el, ev, allowDup=false) => {
+  const st = curState(), e = eqById(st.eq);
+  for(let s=0;s<5;s++){ const step=st.step; st.step=s; const m=rfValidate(st); st.step=step; if(m){ st.step=s; render(); toast(m,true); return; } }
+  try {
+    const f = reportFault({eq:e.id,type:st.ft,desc:st.desc,sev:st.sev,loc:(st.locManual||'').trim()||st.loc||e.loc,photo:st.photo,voice:st.voice,allowDup});
+    replace('outcome',{id:f.id,kind:'recorded'});
+  } catch(err){
+    if(err.dup){ if(await confirmBox('Possible duplicate',`Open fault ${err.dup.id} (${FS[err.dup.status][0]}) already exists for ${err.dup.eqName} — ${err.dup.type}.\n\nRecord a new fault anyway?`,'Record anyway')) return A.rfSubmit(d,el,ev,true); return; }
+    throw err;
+  }
+};
+
+// troubleshooting
+A.startTs = d => { const f=faultById(d.id); if(f) replace('ts',{eq:f.eq,ft:f.type,fid:f.id}); };
+A.startTsPush = d => { const f=faultById(d.id); if(f) go2('ts',{eq:f.eq,ft:f.type,fid:f.id}); };
+function go2(s,p){ stack.push({s,p,st:{}}); render(); }
+A.tsEq = d => { curState().eq = d.id; render(); };
+A.tsChange = () => { curState().eq = null; render(); };
+A.tsStart = d => { const st=curState(); const dup=findDup(st.eq,d.v); go2('ts',{eq:st.eq,ft:d.v,fid:dup?dup.id:''}); };
+A.tsAns = d => { const st=curState(), n=curNode(st); if(n.k!=='q') return; const yes=d.v==='1'; st.log.push(`${n.t} → ${yes?'YES':'NO'}`); st.path.push(yes?n.y:n.n); render(); };
+A.tsNext = () => { const st=curState(), n=curNode(st); if(n.k!=='a') return; st.log.push(`${n.t} → DONE`); st.path.push(n.x); render(); };
+A.tsBack = () => { const st=curState(); if(st.persists){ st.persists=false; } else if(st.path.length>1){ st.path.pop(); st.log.pop(); } render(); };
+A.tsPersist = () => { curState().persists = true; render(); };
+A.tsExit = async () => { if(await confirmBox('Exit troubleshooting?','Progress on these checks will not be saved. Any recorded fault stays recorded.','Exit')) back(); };
+A.tsResolve = async () => {
+  const t=top(), st=t.st, p=t.p;
+  if(!await confirmBox('Confirm resolved','Is the equipment working normally after the checks?','Yes, resolved')) return;
+  if(p.fid) R.resolveByUser(p.fid, st.log); else R.rectifyNoFault(p.eq, p.ft, st.log);
+  replace('outcome',{id:p.fid||'',kind:'restored'});
+};
+A.tsEscalate = async () => {
+  const t=top(), st=t.st, p=t.p;
+  if(!await confirmBox('Escalate to technician','User-level troubleshooting will stop and the fault will be sent to the technician dashboard.','Escalate',true)) return;
+  let id = p.fid;
+  if(id) R.escalate(id, st.log); else id = R.escalateNew(p.eq, p.ft, st.log).id;
+  replace('outcome',{id,kind:'escalated'});
+};
+
+// faults & roles
+A.fFilter = d => { curState().f = d.v; render(); };
+A.tBucket = d => { curState().b = d.v; render(); };
+A.fEscalate = async d => { if(await confirmBox('Escalate?','Send this fault to the technician dashboard?','Escalate',true)){ R.escalate(d.id); done('Fault escalated to technician.'); } };
+A.fAssign = async d => { const t=await pickBox('Assign to technician',TECHS.map(x=>({label:x,v:x}))); if(t){ R.assign(d.id,t.v); done(`Assigned to ${t.v}.`); } };
+A.fClose = d => { R.close(d.id); done('Fault closed.'); };
+A.fAccept = d => { R.accept(d.id); done('Fault accepted.'); };
+A.fStart = d => { R.startRepair(d.id); done('Repair started.'); };
+A.fPartRecv = d => { R.partReceived(d.id); done('Part received. Repair resumed.'); };
+A.fAction = async d => { const f=faultById(d.id); const t=await promptBox('Repair action','What was done to restore the equipment?',f&&f.action||''); if(t){ R.repairAction(d.id,t); done('Repair action recorded.'); } };
+A.fRemark = async d => { const t=await promptBox('Add remarks','Technician remarks'); if(t){ R.remark(d.id,t); done('Remarks added.'); } };
+A.fUsePart = async d => { const x=await pickBox('Select part used',S.parts.map(p=>({label:`${p.name} (${p.no})`,sub:`Qty ${p.qty} · ${p.loc}`,v:p.id}))); if(x){ R.usePart(d.id,x.v); done('Part recorded. Stock updated.'); } };
+A.fAwait = async d => { const x=await pickBox('Part required',S.parts.map(p=>({label:p.name,sub:`${p.no} · Qty ${p.qty}`,v:p.name}))); if(x){ R.awaitPart(d.id,x.v); done(`Marked awaiting part: ${x.v}.`); } };
+A.fResolve = async d => { if(await confirmBox('Mark resolved?','Equipment restored and functionally checked?','Resolved')){ R.resolve(d.id); done('Fault resolved. Maintenance history updated.'); } };
+A.overdue = async () => { const now=iso(Date.now()); const list=S.equipment.filter(e=>e.next&&e.next<now); if(!list.length){ toast('No overdue maintenance.'); return; } const x=await pickBox('Overdue maintenance',list.map(e=>({label:e.name,sub:`Due ${fmtD(e.next)} · ${e.loc}`,v:e.id}))); if(x) go('eqProfile',{id:x.v}); };
+
+// checklist
+A.clToggle = d => { const st=curState(); const it=st.cl.items[Number(d.v)]; if(it){ it.c=!it.c; render(); } };
+A.clSave = () => { const st=curState(); st.cl.updated=iso(Date.now()); S.checklists[st.cl.eq]=JSON.parse(JSON.stringify(st.cl)); save(); done('Checklist progress saved.'); };
+A.clDone = async () => {
+  const st=curState(), cl=st.cl, miss=cl.items.filter(i=>!i.c);
+  if(miss.length && !await confirmBox('Incomplete check',`${miss.length} item(s) not ticked. Complete anyway? Report a fault for any defect found.`,'Complete anyway')) return;
+  cl.done=true; cl.updated=iso(Date.now()); S.checklists[cl.eq]=JSON.parse(JSON.stringify(cl));
+  addRecord(cl.eq,'Daily check', miss.length?`${cl.items.length-miss.length}/${cl.items.length} items checked. Not checked: ${miss.map(i=>i.l).join(', ')}`:`All ${cl.items.length} items checked OK.`,'Completed');
+  save(); back(); toast('Daily check completed and recorded.');
+};
+
+// reference, qr, voice, profile
+A.refCat = d => { curState().cat = d.v; render(); };
+A.qrSim = async () => { const x=await pickBox('Simulated QR tags',S.equipment.map(e=>({label:`QR · ${e.id}`,sub:e.name,v:e.id}))); if(x){ replace('eqProfile',{id:x.v}); toast(`Equipment identified: ${eqById(x.v).name}`); } };
+A.qrOpen = () => { const id=(curState().id||'').trim().toUpperCase(); const e=eqById(id); if(!e){ toast('Equipment not found. Check the ID.',true); return; } replace('eqProfile',{id:e.id}); };
+A.listen = () => { const st=curState(); st.listening=true; render(); setTimeout(()=>{ st.listening=false; st.i=(st.i||0); st.t=VOICE_SAMPLES[st.i%VOICE_SAMPLES.length]; st.i++; render(); },1400); };
+A.voiceGo = () => { const st=curState(); const r=parseVoice(st.t||''); replace('reportFault',{eq:r.eq?r.eq.id:null, ft:r.ft, desc:st.t}); };
+A.theme = () => { const r=document.documentElement; r.dataset.theme = r.dataset.theme==='light'?'dark':'light'; try{ localStorage.setItem('fma_theme',r.dataset.theme); }catch(e){} render(); };
+A.demo = async () => { if(await confirmBox('Load demo data?','This replaces all data on this device with the demo set.','Load demo data')){ seed(); stack=[]; tabState={}; done('Demo data loaded.'); } };
+A.clearAll = async () => { if(await confirmBox('Clear all data?','All equipment, faults and history on this device will be deleted.','Clear all',true)){ S={equipment:[],faults:[],maintenance:[],parts:[],checklists:{},counter:124,cleared:true}; save(); stack=[]; tabState={}; done('All data cleared.'); } };
+A.syncInfo = () => toast('Cloud sync will be enabled in a future connected version.');
+
+// --------------------------------------------------------------- events
+document.addEventListener('click', async ev => {
+  const el = ev.target.closest('[data-a]');
+  if(!el || el.disabled) return;
+  const fn = A[el.dataset.a]; if(!fn) return;
+  try { await fn(el.dataset, el, ev); }
+  catch(err){ console.error(err); toast(err && err.message ? err.message : 'Action failed. Try again.', true); }
+});
+function onBind(ev){
+  const el = ev.target, k = el.dataset && el.dataset.bind; if(!k) return;
+  curState()[k] = el.value;
+  if(el.dataset.after && A[el.dataset.after]) A[el.dataset.after](el.dataset, el, ev);
+  if(el.dataset.live) render();
+}
+document.addEventListener('input', onBind);
+document.addEventListener('change', ev => { if(ev.target.tagName==='SELECT') onBind(ev); });
+document.addEventListener('keydown', ev => {
+  if(ev.key==='Enter' && !user && ev.target.tagName==='INPUT') A.login();
+  if(ev.key==='Escape' && mres) closeModal(null);
+});
+
+// Android hardware back button (called from MainActivity)
+window.fmaBack = () => { if(mres){ closeModal(null); return true; } if(user && stack.length){ stack.pop(); render(); return true; } if(user && tab!==0){ tab=0; render(); return true; } return false; };
+
+// ------------------------------------------------------------------ start
+try { const th=localStorage.getItem('fma_theme'); if(th) document.documentElement.dataset.theme=th; } catch(e){}
+load();
+if(!S || !Array.isArray(S.equipment) || (!S.equipment.length && !S.cleared)) seed();
+render();
+setTimeout(()=>{ phase='app'; render(); }, 1700);
+</script>
+</body>
+</html>

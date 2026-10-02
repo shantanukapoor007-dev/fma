@@ -1,0 +1,44 @@
+name: Build FMA APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build APK
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Name the APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk FMA-Field-Maintenance-Assistant.apk
+
+      - name: Keep APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FMA-APK
+          path: FMA-Field-Maintenance-Assistant.apk
+
+      - name: Publish APK as a downloadable release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: FMA build ${{ github.run_number }}
+          body: Install on Android 8.0 or newer. Allow "Install unknown apps" when prompted.
+          files: FMA-Field-Maintenance-Assistant.apk
